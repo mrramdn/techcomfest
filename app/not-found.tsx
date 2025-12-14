@@ -1,76 +1,147 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export default function NotFound() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("/api/auth/me");
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // Define links based on user role
+  const getQuickLinks = () => {
+    const baseLinks = [
+      { name: "Home", path: "/", icon: "home" },
+      { name: "Recipes", path: "/recipes", icon: "book_2" },
+      { name: "Articles", path: "/articles", icon: "auto_stories" },
+      { name: "Forum", path: "/forum", icon: "chat_bubble" },
+    ];
+
+    if (user?.role === "USER") {
+      return [
+        { name: "Home", path: "/", icon: "home" },
+        { name: "Track", path: "/track", icon: "conversion_path" },
+        ...baseLinks.slice(1),
+      ];
+    }
+
+    if (user?.role === "ADMIN") {
+      return baseLinks;
+    }
+
+    // If not logged in, show all links
+    return [
+      { name: "Home", path: "/", icon: "home" },
+      { name: "Track", path: "/track", icon: "conversion_path" },
+      { name: "Recipes", path: "/recipes", icon: "book_2" },
+      { name: "Articles", path: "/articles", icon: "auto_stories" },
+      { name: "Forum", path: "/forum", icon: "chat_bubble" },
+    ];
+  };
+
+  const quickLinks = getQuickLinks();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-white from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full text-center">
-        {/* Animated 404 with food emoji */}
-        <div className="mb-8 relative">
-          <div className="text-9xl font-bold text-gray-200 select-none">404</div>
+        {/* Logo and 404 */}
+        <div className="mb-8 flex flex-col items-center gap-6">
+          <div className="size-16 rounded-xl overflow-hidden">
+            <Image 
+              src="/images/icon/logo.png" 
+              alt="Lahap Logo" 
+              width={64} 
+              height={64} 
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="text-8xl md:text-9xl font-bold text-gray-300 select-none">404</div>
         </div>
 
         {/* Main message */}
-        <div className="mb-6">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
             Oops! Page Not Found
           </h1>
-          <p className="text-xl text-gray-600 mb-2">
-            Looks like this recipe got lost in the kitchen! 👨‍🍳
+          <p className="text-lg text-gray-600 mb-2">
+            Looks like this page got lost in the kitchen! 👨‍🍳
           </p>
-          <p className="text-lg text-gray-500">
+          <p className="text-base text-gray-500">
             The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </p>
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-8">
           <button
-            onClick={() => router.push("/dashboard")}
-            className="h-12 px-8 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            onClick={() => router.push("/")}
+            className="h-11 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-base font-medium transition-all shadow-sm hover:shadow-md cursor-pointer"
           >
-            🏠 Go to Dashboard
+            <span className="material-symbols-outlined text-lg inline-block mr-2 align-middle">home</span>
+            Go to Home
           </button>
           <button
             onClick={() => router.back()}
-            className="h-12 px-8 rounded-xl bg-white hover:bg-gray-50 text-gray-700 text-lg font-medium transition-all border-2 border-gray-200 hover:border-gray-300"
+            className="h-11 px-6 rounded-xl bg-white hover:bg-gray-50 text-gray-700 text-base font-medium transition-all border border-gray-200 hover:border-gray-300 cursor-pointer"
           >
-            ← Go Back
+            <span className="material-symbols-outlined text-lg inline-block mr-2 align-middle">arrow_back</span>
+            Go Back
           </button>
         </div>
 
-        {/* Additional help */}
-        <div className="mt-12 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-600 mb-4">Need help finding something?</p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <button
-              onClick={() => router.push("/")}
-              className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-            >
-              🏡 Home
-            </button>
-            <button
-              onClick={() => router.push("/recipes")}
-              className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-            >
-              🍳 Recipes
-            </button>
-            <button
-              onClick={() => router.push("/articles")}
-              className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-            >
-              📰 Articles
-            </button>
-            <button
-              onClick={() => router.push("/track")}
-              className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-            >
-              📝 Track
-            </button>
+        {/* Quick Links */}
+        <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+          <p className="text-gray-700 font-medium mb-4">Quick Links</p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {quickLinks.map((link) => (
+              <button
+                key={link.path}
+                onClick={() => router.push(link.path)}
+                className="h-9 px-4 rounded-lg bg-slate-100 hover:bg-slate-200 text-gray-700 text-sm font-medium transition-colors inline-flex items-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">{link.icon}</span>
+                {link.name}
+              </button>
+            ))}
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 text-sm text-gray-500">
+          Error Code: 404 | Page Not Found
         </div>
       </div>
     </div>
