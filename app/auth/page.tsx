@@ -135,7 +135,7 @@ function AuthPageContent() {
           </div>
 
           {/* Heading */}
-          <div className="flex flex-col gap-[3px]">
+          <div className="flex flex-col gap-0.75">
             <div className="text-black text-2xl font-medium leading-8">
               {mode === "signup" ? "Create account 😁" : "Welcome back 👋"}
             </div>
@@ -145,7 +145,7 @@ function AuthPageContent() {
           </div>
 
           {/* Tab Switch */}
-          <div className="h-11 rounded-xl outline outline-1 outline-offset-[-1px] outline-gray-300 p-1 inline-flex gap-1 w-full">
+          <div className="h-11 rounded-xl outline-1 -outline-offset-1 outline-gray-300 p-1 inline-flex gap-1 w-full">
             <button
               onClick={() => setMode("signin")}
               className={`flex-1 rounded-lg py-2 flex items-center justify-center transition-colors cursor-pointer ${
@@ -176,7 +176,7 @@ function AuthPageContent() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <div className="text-black text-base font-medium leading-6">Email address</div>
-              <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline outline-1 outline-offset-[-1px] outline-gray-300 flex items-center justify-between">
+              <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline-1 -outline-offset-1 outline-gray-300 flex items-center justify-between">
                 <input
                   type="email"
                   value={email}
@@ -192,7 +192,7 @@ function AuthPageContent() {
               <div className="text-black text-base font-medium leading-6">
                 {mode === "signup" ? "Create a password" : "Password"}
               </div>
-              <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline outline-1 outline-offset-[-1px] outline-gray-300 flex items-center justify-between">
+              <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline-1 -outline-offset-1 outline-gray-300 flex items-center justify-between">
                 <input
                   type="password"
                   value={password}
@@ -223,7 +223,7 @@ function AuthPageContent() {
             {mode === "signup" && (
               <div className="flex flex-col gap-1.5">
                 <div className="text-black text-base font-medium leading-6">Confirm password</div>
-                <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline outline-1 outline-offset-[-1px] outline-gray-300 flex items-center justify-between">
+                <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline-1 -outline-offset-1 outline-gray-300 flex items-center justify-between">
                   <input
                     type="password"
                     value={confirmPassword}
@@ -255,14 +255,14 @@ function AuthPageContent() {
 
           {/* Divider */}
           <div className="inline-flex items-center gap-4">
-            <div className="flex-1 h-0 outline outline-[1.50px] outline-offset-[-0.75px] outline-gray-300" />
+            <div className="flex-1 h-0 outline-1 -outline-offset-1 outline-gray-300" />
             <div className="text-center text-gray-300 text-base font-normal leading-6">Or</div>
-            <div className="flex-1 h-0 outline outline-[1.50px] outline-offset-[-0.75px] outline-gray-300" />
+            <div className="flex-1 h-0 outline-1 -outline-offset-1 outline-gray-300" />
           </div>
 
           {/* Social Sign-in */}
           <div className="flex flex-col gap-3">
-            <button className="rounded-xl bg-gray-200 py-2.5 w-full outline outline-1 outline-offset-[-1px] outline-gray-300 inline-flex items-center justify-center gap-2.5 hover:bg-gray-50 transition-colors cursor-pointer">
+            <button className="rounded-xl bg-gray-200 py-2.5 w-full outline-1 -outline-offset-1 outline-gray-300 inline-flex items-center justify-center gap-2.5 hover:bg-gray-50 transition-colors cursor-pointer">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
