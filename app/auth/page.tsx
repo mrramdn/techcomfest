@@ -21,6 +21,8 @@ function AuthPageContent() {
   const [message, setMessage] = useState("");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -192,9 +194,9 @@ function AuthPageContent() {
               <div className="text-black text-base font-medium leading-6">
                 {mode === "signup" ? "Create a password" : "Password"}
               </div>
-              <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline-1 -outline-offset-1 outline-gray-300 flex items-center justify-between">
+              <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline-1 -outline-offset-1 outline-gray-300 flex items-center justify-between gap-2">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={mode === "signup" ? "password must be 8 character" : "enter your password"}
@@ -202,6 +204,15 @@ function AuthPageContent() {
                   required
                   minLength={8}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-xl">
+                    {showPassword ? "visibility" : "visibility_off"}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -223,15 +234,24 @@ function AuthPageContent() {
             {mode === "signup" && (
               <div className="flex flex-col gap-1.5">
                 <div className="text-black text-base font-medium leading-6">Confirm password</div>
-                <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline-1 -outline-offset-1 outline-gray-300 flex items-center justify-between">
+                <div className="h-12 rounded-xl bg-slate-200 px-3.5 py-3 outline-1 -outline-offset-1 outline-gray-300 flex items-center justify-between gap-2">
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat password"
                     className="flex-1 bg-transparent text-gray-500 text-base font-normal leading-6 outline-none"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-xl">
+                      {showConfirmPassword ? "visibility" : "visibility_off"}
+                    </span>
+                  </button>
                 </div>
               </div>
             )}

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminDashboard from "./dashboard/_components/AdminDashboard";
-import UserDashboard from "./dashboard/_components/UserDashboard";
+import AdminDashboard from "./_components/AdminDashboard";
+import UserDashboard from "./_components/UserDashboard";
 
 interface User {
   name: string;
@@ -47,5 +47,9 @@ export default function DashboardPage() {
     return null;
   }
 
-  return user.role === "ADMIN" ? <AdminDashboard user={user} /> : <UserDashboard user={user} />;
+  return user.role === "ADMIN" ? (
+    <AdminDashboard user={user} />
+  ) : (
+    <UserDashboard user={user} />
+  );
 }

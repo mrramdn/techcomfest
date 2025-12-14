@@ -1,15 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifySessionEdge } from "@/lib/jwt";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const token = request.headers
-      .get("cookie")
-      ?.split(";")
-      .map((c) => c.trim())
-      .find((c) => c.startsWith("session-token="))
-      ?.split("=")[1];
+    const token = request.cookies.get("session-token")?.value;
+    
+    console.log('Token from cookies:', token ? 'Found' : 'Not found');
 
     if (!token) {
       return NextResponse.json(
@@ -19,6 +16,7 @@ export async function GET(request: Request) {
     }
 
     const session = await verifySessionEdge(token);
+    console.log('Session verified for user:', session.sub);
 
     const user = await prisma.user.findUnique({
       where: { id: String(session.sub) },

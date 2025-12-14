@@ -58,7 +58,13 @@ export default function LandingPage() {
           >
             <div className="flex items-center gap-4">
               <div className="size-8 rounded-lg overflow-hidden">
-                <Image src="/images/icon/logo.png" alt="Lahap Logo" width={32} height={32} className="w-full h-full object-contain" />
+                <Image
+                  src="/images/icon/logo.png"
+                  alt="Lahap Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="text-black text-lg font-semibold">Lahap</div>
             </div>
@@ -70,7 +76,11 @@ export default function LandingPage() {
 
         {/* Main content */}
         <div className="flex-1">
-          {user.role === "ADMIN" ? <AdminDashboard user={user} /> : <UserDashboard user={user} />}
+          {user.role === "ADMIN" ? (
+            <AdminDashboard user={user} />
+          ) : (
+            <UserDashboard user={user} />
+          )}
         </div>
       </div>
     );
@@ -91,9 +101,17 @@ export default function LandingPage() {
       <div className="relative z-10 mx-auto flex h-full max-w-4xl flex-col items-center justify-center px-4 sm:px-6 gap-8 sm:gap-12">
         <div className="inline-flex justify-center items-center gap-3 sm:gap-4">
           <div className="size-8 sm:size-10 rounded-lg overflow-hidden">
-            <Image src="/images/icon/logo.png" alt="Lahap Logo" width={40} height={40} className="w-full h-full object-contain" />
+            <Image
+              src="/images/icon/logo.png"
+              alt="Lahap Logo"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain"
+            />
           </div>
-          <div className="justify-start text-black text-sm sm:text-base font-bold font-['SF_Pro_Display'] leading-5 sm:leading-6">Lahap</div>
+          <div className="justify-start text-black text-sm sm:text-base font-bold font-['SF_Pro_Display'] leading-5 sm:leading-6">
+            Lahap
+          </div>
         </div>
         <div className="w-full max-w-lg p-4 sm:p-5 bg-gray-500/10 rounded-2xl sm:rounded-4xl ring-1 ring-white/30 backdrop-blur-[5px] inline-flex justify-start items-center gap-2.5">
           <div className="w-full inline-flex flex-col justify-start items-center gap-6 sm:gap-8">
@@ -104,11 +122,28 @@ export default function LandingPage() {
                   viewBox="0 0 24 24"
                   className="size-3.5 sm:size-4 text-sky-700 fill-current"
                 >
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
-                  <line x1="12" y1="7" x2="12" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                  <line
+                    x1="12"
+                    y1="7"
+                    x2="12"
+                    y2="13"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
                   <circle cx="12" cy="17" r="1.5" fill="currentColor" />
                 </svg>
-                <div className="text-sky-700 text-xs font-medium leading-4">What we do</div>
+                <div className="text-sky-700 text-xs font-medium leading-4">
+                  What we do
+                </div>
               </div>
             </div>
             <div className="w-full text-center justify-start text-black text-2xl sm:text-3xl md:text-4xl font-semibold font-['SF_Pro_Display'] leading-7 sm:leading-9 md:leading-10">
@@ -116,15 +151,31 @@ export default function LandingPage() {
             </div>
             <div className="self-stretch px-4 sm:px-6 py-5 sm:py-7 bg-white rounded-xl flex flex-col justify-start items-start gap-6">
               <div className="w-full text-center justify-start text-black text-base sm:text-lg md:text-xl font-medium font-['SF_Pro_Display'] leading-6 sm:leading-7 md:leading-8">
-                Our platform is designed to support parents navigating the challenges that often arise during a child&apos;s feeding journey especially when entering solid foods or experiencing Feeding Refusal behaviors such as mouth closing. We understand that this phase can feel overwhelming, confusing, and emotionally draining for many parents. experience for their child.
+                Our platform is designed to support parents navigating the
+                challenges that often arise during a child&apos;s feeding
+                journey especially when entering solid foods or experiencing
+                Feeding Refusal behaviors such as mouth closing. We understand
+                that this phase can feel overwhelming, confusing, and
+                emotionally draining for many parents. experience for their
+                child.
               </div>
             </div>
             <div className="self-stretch inline-flex flex-col sm:flex-row justify-start items-center gap-3">
-              <a href="/auth?mode=signin" className="w-full sm:flex-1 h-11 px-6 sm:px-12 md:px-20 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl flex justify-center items-center gap-2.5 transition-colors cursor-pointer">
-                <div className="text-center justify-start text-black text-base sm:text-lg font-medium font-['SF_Pro_Display'] leading-6 sm:leading-7">Sign in</div>
+              <a
+                href="/auth?mode=signin"
+                className="w-full sm:flex-1 h-11 px-6 sm:px-12 md:px-20 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl flex justify-center items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <div className="text-center justify-start text-black text-base sm:text-lg font-medium font-['SF_Pro_Display'] leading-6 sm:leading-7">
+                  Sign in
+                </div>
               </a>
-              <a href="/auth?mode=signup" className="w-full sm:flex-1 h-11 px-6 sm:px-12 md:px-20 py-2 bg-blue-500 hover:bg-blue-600 rounded-xl flex justify-center items-center gap-2.5 transition-colors cursor-pointer">
-                <div className="text-center justify-start text-white text-base sm:text-lg font-medium font-['SF_Pro_Display'] leading-6 sm:leading-7">Sign up</div>
+              <a
+                href="/auth?mode=signup"
+                className="w-full sm:flex-1 h-11 px-6 sm:px-12 md:px-20 py-2 bg-blue-500 hover:bg-blue-600 rounded-xl flex justify-center items-center gap-2.5 transition-colors cursor-pointer"
+              >
+                <div className="text-center justify-start text-white text-base sm:text-lg font-medium font-['SF_Pro_Display'] leading-6 sm:leading-7">
+                  Sign up
+                </div>
               </a>
             </div>
           </div>

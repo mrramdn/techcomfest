@@ -18,7 +18,10 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType>({ user: null });
 
-export const useUser = () => useContext(UserContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
+  return context.user;
+};
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -33,12 +36,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("/api/auth/me");
+        console.log('Fetching user from /api/auth/me...');
+        const res = await fetch("/api/auth/me", {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('Response status:', res.status);
         if (!res.ok) {
+          console.log('Not authenticated, redirecting to login');
           router.push("/auth?mode=signin");
           return;
         }
         const data = await res.json();
+        console.log('User data received:', data);
         setUser(data.user);
         setLoading(false);
       } catch (error) {

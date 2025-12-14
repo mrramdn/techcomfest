@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         success: true,
         message: "Sign in successful.",
         user: safeUser,
-        redirectUrl: "/dashboard",
+        redirectUrl: "/",
       },
       { status: 200 },
     );

@@ -13,14 +13,16 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(uuid())
-  name           String
-  email          String    @unique
-  profilePicture String?   @db.VarChar(512)
-  hashedPassword String
-  role           Role      @default(USER)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  name            String
+  email           String    @unique
+  profilePicture  String?   @db.VarChar(512)
+  hashedPassword  String
+  role            Role      @default(USER)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdRecipes  Recipe[]  @relation("RecipeAuthor")
+  favoritedRecipes FavoriteRecipe[]
 }
 
 model Session {
@@ -33,4 +35,64 @@ model Session {
 enum Role {
   USER
   ADMIN
+}
+
+model Recipe {
+  id              String    @id @default(uuid())
+  name            String
+  category        String
+  description     String    @db.Text
+  image           String?
+  prepTime        Int       // in minutes
+  cookTime        Int       // in minutes
+  difficulty      Difficulty
+  servings        Int
+  
+  // JSON fields for complex data
+  ingredients     Json      // Array of {name: string, amount: string, unit: string}
+  instructions    Json      // Array of {step: number, description: string}
+  nutrition       Json      // {calories: number, fat: number, protein: number, carbs: number, fiber: number, sugar?: number, sodium?: number}
+  
+  // Metadata
+  views           Int       @default(0)
+  status          RecipeStatus @default(DRAFT)
+  source          String?
+  tags            String[]  @default([])
+  
+  // Relations
+  authorId        String
+  author          User      @relation("RecipeAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  favoritedBy     FavoriteRecipe[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([authorId])
+  @@index([status])
+  @@index([category])
+}
+
+model FavoriteRecipe {
+  id        String   @id @default(uuid())
+  userId    String
+  recipeId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, recipeId])
+  @@index([userId])
+  @@index([recipeId])
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum RecipeStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }

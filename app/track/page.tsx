@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 function TrackContent() {
-  const { user } = useUser();
+  const user = useUser();
   const router = useRouter();
 
   useEffect(() => {

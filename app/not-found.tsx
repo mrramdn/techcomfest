@@ -80,15 +80,17 @@ export default function NotFound() {
         {/* Logo and 404 */}
         <div className="mb-8 flex flex-col items-center gap-6">
           <div className="size-16 rounded-xl overflow-hidden">
-            <Image 
-              src="/images/icon/logo.png" 
-              alt="Lahap Logo" 
-              width={64} 
-              height={64} 
+            <Image
+              src="/images/icon/logo.png"
+              alt="Lahap Logo"
+              width={64}
+              height={64}
               className="w-full h-full object-contain"
             />
           </div>
-          <div className="text-8xl md:text-9xl font-bold text-gray-300 select-none">404</div>
+          <div className="text-8xl md:text-9xl font-bold text-gray-300 select-none">
+            404
+          </div>
         </div>
 
         {/* Main message */}
@@ -100,7 +102,8 @@ export default function NotFound() {
             Looks like this page got lost in the kitchen! 👨‍🍳
           </p>
           <p className="text-base text-gray-500">
-            The page you&apos;re looking for doesn&apos;t exist or has been moved.
+            The page you&apos;re looking for doesn&apos;t exist or has been
+            moved.
           </p>
         </div>
 
@@ -110,14 +113,18 @@ export default function NotFound() {
             onClick={() => router.push("/")}
             className="h-11 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-base font-medium transition-all shadow-sm hover:shadow-md cursor-pointer"
           >
-            <span className="material-symbols-outlined text-lg inline-block mr-2 align-middle">home</span>
+            <span className="material-symbols-outlined text-lg inline-block mr-2 align-middle">
+              home
+            </span>
             Go to Home
           </button>
           <button
             onClick={() => router.back()}
             className="h-11 px-6 rounded-xl bg-white hover:bg-gray-50 text-gray-700 text-base font-medium transition-all border border-gray-200 hover:border-gray-300 cursor-pointer"
           >
-            <span className="material-symbols-outlined text-lg inline-block mr-2 align-middle">arrow_back</span>
+            <span className="material-symbols-outlined text-lg inline-block mr-2 align-middle">
+              arrow_back
+            </span>
             Go Back
           </button>
         </div>
@@ -132,7 +139,9 @@ export default function NotFound() {
                 onClick={() => router.push(link.path)}
                 className="h-9 px-4 rounded-lg bg-slate-100 hover:bg-slate-200 text-gray-700 text-sm font-medium transition-colors inline-flex items-center gap-2 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-lg">{link.icon}</span>
+                <span className="material-symbols-outlined text-lg">
+                  {link.icon}
+                </span>
                 {link.name}
               </button>
             ))}
