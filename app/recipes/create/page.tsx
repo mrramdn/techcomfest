@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AppLayout from "@/app/_components/AppLayout";
 
 const inputClass =
-  "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50";
+  "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900";
 
 interface Ingredient {
   name: string;
@@ -145,14 +146,15 @@ export default function CreateRecipePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <Link
-          href="/recipes"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
-        >
-          ← Back to Recipes
-        </Link>
+    <AppLayout>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-4xl mx-auto">
+          <Link
+            href="/recipes"
+            className="inline-flex items-center gap-2 text-gray-900 hover:text-blue-600 mb-6 font-medium"
+          >
+            ← Back to Recipes
+          </Link>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-6">
           Create New Recipe
@@ -166,7 +168,7 @@ export default function CreateRecipePage() {
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Recipe Name *
                 </label>
                 <input
@@ -180,7 +182,7 @@ export default function CreateRecipePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     Category *
                   </label>
                   <select
@@ -198,7 +200,7 @@ export default function CreateRecipePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     Difficulty *
                   </label>
                   <select
@@ -215,7 +217,7 @@ export default function CreateRecipePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Description *
                 </label>
                 <textarea
@@ -228,7 +230,7 @@ export default function CreateRecipePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Image URL
                 </label>
                 <input
@@ -242,7 +244,7 @@ export default function CreateRecipePage() {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     Prep Time (min) *
                   </label>
                   <input
@@ -254,7 +256,7 @@ export default function CreateRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     Cook Time (min) *
                   </label>
                   <input
@@ -266,7 +268,7 @@ export default function CreateRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     Servings *
                   </label>
                   <input
@@ -278,7 +280,7 @@ export default function CreateRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                     Status *
                   </label>
                   <select
@@ -295,7 +297,7 @@ export default function CreateRecipePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Tags (comma separated)
                 </label>
                 <input
@@ -308,7 +310,7 @@ export default function CreateRecipePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Source (optional)
                 </label>
                 <input
@@ -346,7 +348,7 @@ export default function CreateRecipePage() {
                     onChange={(e) =>
                       updateIngredient(index, "name", e.target.value)
                     }
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     required
                   />
                   <input
@@ -356,7 +358,7 @@ export default function CreateRecipePage() {
                     onChange={(e) =>
                       updateIngredient(index, "amount", e.target.value)
                     }
-                    className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                    className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     required
                   />
                   <input
@@ -366,7 +368,7 @@ export default function CreateRecipePage() {
                     onChange={(e) =>
                       updateIngredient(index, "unit", e.target.value)
                     }
-                    className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                    className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     required
                   />
                   <button
@@ -408,7 +410,7 @@ export default function CreateRecipePage() {
                     value={instruction.description}
                     onChange={(e) => updateInstruction(index, e.target.value)}
                     rows={3}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     required
                   />
                   <button
@@ -431,7 +433,7 @@ export default function CreateRecipePage() {
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Calories *
                 </label>
                 <input
@@ -444,7 +446,7 @@ export default function CreateRecipePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Fat (g) *
                 </label>
                 <input
@@ -457,7 +459,7 @@ export default function CreateRecipePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Protein (g) *
                 </label>
                 <input
@@ -470,7 +472,7 @@ export default function CreateRecipePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Carbs (g) *
                 </label>
                 <input
@@ -483,7 +485,7 @@ export default function CreateRecipePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Fiber (g) *
                 </label>
                 <input
@@ -496,7 +498,7 @@ export default function CreateRecipePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Sugar (g)
                 </label>
                 <input
@@ -508,7 +510,7 @@ export default function CreateRecipePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Sodium (mg)
                 </label>
                 <input
@@ -541,5 +543,6 @@ export default function CreateRecipePage() {
         </form>
       </div>
     </div>
+    </AppLayout>
   );
 }
