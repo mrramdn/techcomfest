@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import AdminDashboard from "./dashboard/_components/AdminDashboard";
-import UserDashboard from "./dashboard/_components/UserDashboard";
+import AdminDashboard from "./_components/AdminDashboard";
+import UserDashboard from "./_components/UserDashboard";
 import Header from "./_components/Header";
 
 interface User {
