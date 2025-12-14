@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 
 type Mode = "signin" | "signup";
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryModeParam = searchParams?.get("mode");
@@ -282,5 +282,29 @@ export default function AuthPage() {
       </div>
 
     </main>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-10 rounded-lg overflow-hidden">
+            <Image 
+              src="/images/icon/logo.png" 
+              alt="Lahap Logo" 
+              width={40} 
+              height={40} 
+              className="w-full h-full object-contain animate-pulse" 
+              priority
+            />
+          </div>
+          <div className="text-gray-500 text-sm animate-pulse">Loading...</div>
+        </div>
+      </div>
+    }>
+      <AuthPageContent />
+    </Suspense>
   );
 }
