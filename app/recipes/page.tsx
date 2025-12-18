@@ -1,44 +1,16 @@
 ﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import AppLayout, { useUser } from "../_components/AppLayout";
 
-interface Recipe {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  image: string | null;
-  prepTime: number;
-  cookTime: number;
-  difficulty: string;
-  servings: number;
-  views: number;
-  status: string;
-  nutrition: {
-    calories: number;
-    fat: number;
-    protein: number;
-    carbs: number;
-    fiber: number;
-  };
-  isFavorited: boolean;
-  favoritesCount: number;
-  author: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
+import type { RecipeSummary } from "./_lib/recipeTypes";
 
 function RecipesContent() {
-  const router = useRouter();
   const user = useUser(); // Now inside AppLayout context
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
+  const [favoriteRecipes, setFavoriteRecipes] = useState<RecipeSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -66,10 +38,10 @@ function RecipesContent() {
       if (response.ok) {
         const data = await response.json();
         const uniqueCategories = Array.from(
-          new Set(data.recipes.map((r: Recipe) => r.category))
+          new Set(data.recipes.map((r: RecipeSummary) => r.category))
         ).sort() as string[];
         const uniqueDifficulties = Array.from(
-          new Set(data.recipes.map((r: Recipe) => r.difficulty))
+          new Set(data.recipes.map((r: RecipeSummary) => r.difficulty))
         ).sort() as string[];
         setCategories(uniqueCategories);
         setDifficulties(uniqueDifficulties);
@@ -96,20 +68,20 @@ function RecipesContent() {
 
         // Client-side filtering
         if (selectedDifficulties.length > 0) {
-          filtered = filtered.filter((r: Recipe) =>
+          filtered = filtered.filter((r: RecipeSummary) =>
             selectedDifficulties.includes(r.difficulty)
           );
         }
         if (maxTime) {
           const time = parseInt(maxTime);
           filtered = filtered.filter(
-            (r: Recipe) => r.prepTime + r.cookTime <= time
+            (r: RecipeSummary) => r.prepTime + r.cookTime <= time
           );
         }
         if (maxCalories) {
           const cal = parseInt(maxCalories);
           filtered = filtered.filter(
-            (r: Recipe) => r.nutrition.calories <= cal
+            (r: RecipeSummary) => r.nutrition.calories <= cal
           );
         }
 
@@ -184,7 +156,7 @@ function RecipesContent() {
       fetchRecipes();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, selectedCategories, selectedDifficulties, maxTime, maxCalories]);
+  }, [fetchRecipes]);
 
   const clearFilters = () => {
     setSelectedCategories([]);
@@ -209,21 +181,21 @@ function RecipesContent() {
   // Admin view - Table layout (only if user exists AND role is exactly "ADMIN")
   if (user && user.role === "ADMIN") {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-6 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                   Manage Recipes
                 </h1>
-                <p className="text-gray-500 mt-1">
+                <p className="text-sm md:text-base text-gray-500 mt-1">
                   Create, edit, and manage all recipes
                 </p>
               </div>
               <Link
                 href="/recipes/create"
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+                className="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 text-sm md:text-base whitespace-nowrap"
               >
                 <span className="text-xl">+</span>
                 Create New Recipe
@@ -231,38 +203,38 @@ function RecipesContent() {
             </div>
 
             {/* Search */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 mb-4 md:mb-6">
               <input
                 type="text"
-                placeholder="Search recipes by name or category..."
+                placeholder="Search recipes..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-sm md:text-base"
               />
             </div>
 
             {/* Recipes Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-160">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Recipe
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Category
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Difficulty
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Views
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 md:px-6 py-3 md:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Author
                       </th>
-                      <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 md:px-6 py-3 md:py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -272,7 +244,7 @@ function RecipesContent() {
                       <tr>
                         <td
                           colSpan={6}
-                          className="px-6 py-12 text-center text-gray-500"
+                          className="px-3 md:px-6 py-8 md:py-12 text-center text-gray-500 text-sm md:text-base"
                         >
                           No recipes found
                         </td>
@@ -283,36 +255,38 @@ function RecipesContent() {
                           key={recipe.id}
                           className="hover:bg-gray-50 transition-colors"
                         >
-                          <td className="px-6 py-4">
+                          <td className="px-3 md:px-6 py-3 md:py-4">
                             <div className="flex items-center gap-3">
                               {recipe.image ? (
-                                <img
+                                <Image
                                   src={recipe.image}
                                   alt={recipe.name}
-                                  className="size-12 rounded-lg object-cover"
+                                  width={48}
+                                  height={48}
+                                  className="size-10 md:size-12 rounded-lg object-cover"
                                 />
                               ) : (
-                                <div className="size-12 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400">
+                                <div className="size-10 md:size-12 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400">
                                   🍳
                                 </div>
                               )}
                               <div>
-                                <p className="font-medium text-gray-900">
+                                <p className="font-medium text-gray-900 text-sm md:text-base">
                                   {recipe.name}
                                 </p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-xs md:text-sm text-gray-500">
                                   {recipe.prepTime + recipe.cookTime} mins •{" "}
                                   {recipe.servings} servings
                                 </p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-700">
+                          <td className="px-3 md:px-6 py-3 md:py-4">
+                            <span className="text-xs md:text-sm text-gray-700">
                               {recipe.category}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 md:px-6 py-3 md:py-4">
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 recipe.difficulty === "EASY"
@@ -325,43 +299,43 @@ function RecipesContent() {
                               {recipe.difficulty}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-700">
+                          <td className="px-3 md:px-6 py-3 md:py-4">
+                            <span className="text-xs md:text-sm text-gray-700">
                               {recipe.views}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-700">
+                          <td className="px-3 md:px-6 py-3 md:py-4">
+                            <span className="text-xs md:text-sm text-gray-700">
                               {recipe.author.name}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-3 md:px-6 py-3 md:py-4 text-right">
                             <div className="flex items-center justify-end gap-3">
                               <Link
                                 href={`/recipes/${recipe.id}`}
-                                className="text-blue-600 hover:text-blue-800 transition-colors"
+                                className="text-blue-600 hover:text-blue-800 transition-colors p-1.5 md:p-2"
                                 target="_blank"
                                 title="View"
                               >
-                                <span className="material-symbols-outlined text-xl">
+                                <span className="material-symbols-outlined text-lg md:text-xl">
                                   visibility
                                 </span>
                               </Link>
                               <Link
                                 href={`/recipes/edit/${recipe.id}`}
-                                className="text-green-600 hover:text-green-800 transition-colors"
+                                className="text-green-600 hover:text-green-800 transition-colors p-1.5 md:p-2"
                                 title="Edit"
                               >
-                                <span className="material-symbols-outlined text-xl">
+                                <span className="material-symbols-outlined text-lg md:text-xl">
                                   edit
                                 </span>
                               </Link>
                               <button
                                 onClick={() => handleDelete(recipe.id)}
-                                className="text-red-600 hover:text-red-800 transition-colors"
+                                className="text-red-600 hover:text-red-800 transition-colors p-1.5 md:p-2"
                                 title="Delete"
                               >
-                                <span className="material-symbols-outlined text-xl">
+                                <span className="material-symbols-outlined text-lg md:text-xl">
                                   delete
                                 </span>
                               </button>
@@ -381,9 +355,9 @@ function RecipesContent() {
 
   // User view - Card layout with filters
   return (
-    <div className="flex">
+    <div className="flex flex-col lg:flex-row">
         {/* Sidebar Filter */}
-        <div className="w-64 h-screen border-r border-gray-200 pr-0">
+        <div className="w-full lg:w-64 lg:min-h-screen border-b lg:border-b-0 lg:border-r border-gray-200 pr-0">
           <div className="border-b border-gray-200 pb-4 mb-6">
             <div className="p-6 pb-0 pt-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-500">Filter</h2>
@@ -703,7 +677,7 @@ function RecipesContent() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-4 md:p-6 lg:p-8">
           {/* Favorites Section */}
           {user && favoriteRecipes.length > 0 && (
             <>
@@ -711,11 +685,11 @@ function RecipesContent() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-5">
                   My Favorite Recipes
                 </h2>
-                <div className="flex flex-wrap gap-5">
+                <div className="flex flex-wrap gap-4 md:gap-6">
                   {favoriteRecipes.map((recipe) => (
                     <div
                       key={recipe.id}
-                      className="w-80 h-96 p-5 bg-white rounded-[20px] outline -outline-offset-1 outline-gray-200 flex justify-start items-center gap-2.5 hover:shadow-md transition-shadow"
+                      className="w-80 h-96 p-5 bg-white rounded-3xl outline -outline-offset-1 outline-gray-200 flex justify-start items-center gap-2.5 hover:shadow-md transition-shadow"
                     >
                       <div className="flex-1 self-stretch inline-flex flex-col justify-start items-start gap-1.5">
                         <Link
@@ -932,11 +906,11 @@ function RecipesContent() {
                 <p className="text-gray-500">No recipes found</p>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-5">
+              <div className="flex flex-wrap gap-4 md:gap-6">
                 {recipes.map((recipe) => (
                   <div
                     key={recipe.id}
-                    className="w-80 h-96 p-5 bg-white rounded-[20px] outline -outline-offset-1 outline-gray-200 flex justify-start items-center gap-2.5 hover:shadow-md transition-shadow"
+                    className="w-80 h-96 p-5 bg-white rounded-3xl outline -outline-offset-1 outline-gray-200 flex justify-start items-center gap-2.5 hover:shadow-md transition-shadow"
                   >
                     <div className="flex-1 self-stretch inline-flex flex-col justify-start items-start gap-1.5">
                       <Link

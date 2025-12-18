@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const redirectUrl = "/auth?mode=signin";
 
   const clearCookie = (res: NextResponse) => {
