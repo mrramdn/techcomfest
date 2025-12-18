@@ -12,6 +12,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  profilePicture?: string | null;
 }
 
 export default function LandingPage() {
@@ -109,13 +110,13 @@ export default function LandingPage() {
               className="w-full h-full object-contain"
             />
           </div>
-          <div className="justify-start text-black text-sm sm:text-base font-bold font-['SF_Pro_Display'] leading-5 sm:leading-6">
+          <div className="justify-start text-black text-sm sm:text-base font-bold leading-5 sm:leading-6">
             Lahap
           </div>
         </div>
-        <div className="w-full max-w-lg p-4 sm:p-5 bg-gray-500/10 rounded-2xl sm:rounded-4xl ring-1 ring-white/30 backdrop-blur-[5px] inline-flex justify-start items-center gap-2.5">
+        <div className="w-full max-w-lg p-4 sm:p-5 bg-gray-500/10 rounded-2xl sm:rounded-4xl ring-1 ring-white/30 backdrop-blur-sm inline-flex justify-start items-center gap-2.5">
           <div className="w-full inline-flex flex-col justify-start items-center gap-6 sm:gap-8">
-            <div className="px-3 sm:px-3.5 py-1 sm:py-1.5 bg-white rounded-[30px] flex flex-col justify-center items-center gap-2.5">
+            <div className="px-3 sm:px-3.5 py-1 sm:py-1.5 bg-white rounded-full flex flex-col justify-center items-center gap-2.5">
               <div className="inline-flex justify-start items-center gap-1">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -146,11 +147,11 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            <div className="w-full text-center justify-start text-black text-2xl sm:text-3xl md:text-4xl font-semibold font-['SF_Pro_Display'] leading-7 sm:leading-9 md:leading-10">
+            <div className="w-full text-center justify-start text-black text-2xl sm:text-3xl md:text-4xl font-semibold leading-7 sm:leading-9 md:leading-10">
               Say Goodbye to Mealtime Battles!
             </div>
             <div className="self-stretch px-4 sm:px-6 py-5 sm:py-7 bg-white rounded-xl flex flex-col justify-start items-start gap-6">
-              <div className="w-full text-center justify-start text-black text-base sm:text-lg md:text-xl font-medium font-['SF_Pro_Display'] leading-6 sm:leading-7 md:leading-8">
+              <div className="w-full text-center justify-start text-black text-base sm:text-lg md:text-xl font-medium leading-6 sm:leading-7 md:leading-8">
                 Our platform is designed to support parents navigating the
                 challenges that often arise during a child&apos;s feeding
                 journey especially when entering solid foods or experiencing
@@ -165,7 +166,7 @@ export default function LandingPage() {
                 href="/auth?mode=signin"
                 className="w-full sm:flex-1 h-11 px-6 sm:px-12 md:px-20 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl flex justify-center items-center gap-2.5 transition-colors cursor-pointer"
               >
-                <div className="text-center justify-start text-black text-base sm:text-lg font-medium font-['SF_Pro_Display'] leading-6 sm:leading-7">
+                <div className="text-center justify-start text-black text-base sm:text-lg font-medium leading-6 sm:leading-7">
                   Sign in
                 </div>
               </a>
@@ -173,7 +174,7 @@ export default function LandingPage() {
                 href="/auth?mode=signup"
                 className="w-full sm:flex-1 h-11 px-6 sm:px-12 md:px-20 py-2 bg-blue-500 hover:bg-blue-600 rounded-xl flex justify-center items-center gap-2.5 transition-colors cursor-pointer"
               >
-                <div className="text-center justify-start text-white text-base sm:text-lg font-medium font-['SF_Pro_Display'] leading-6 sm:leading-7">
+                <div className="text-center justify-start text-white text-base sm:text-lg font-medium leading-6 sm:leading-7">
                   Sign up
                 </div>
               </a>
