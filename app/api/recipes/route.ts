@@ -1,10 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtVerify } from "jose";
+import { Prisma, Difficulty, RecipeStatus } from "@prisma/client";
+import fs from "fs";
+import path from "path";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key"
 );
+
+type RecipeCreatePayload = {
+  name: string;
+  category: string;
+  description: string;
+  image?: string | null;
+  prepTime: number;
+  cookTime: number;
+  difficulty: string;
+  servings: number;
+  ingredients: unknown;
+  instructions: unknown;
+  nutrition: unknown;
+  status?: string;
+  source?: string | null;
+  tags?: unknown;
+};
+
+function parseNumber(value: FormDataEntryValue | null): number | null {
+  if (value === null) return null;
+  const num = Number(String(value));
+  return Number.isFinite(num) ? num : null;
+}
+
+function parseJson(value: FormDataEntryValue | null): unknown {
+  if (value === null) return null;
+  const str = String(value);
+  try {
+    return JSON.parse(str);
+  } catch {
+    return null;
+  }
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((v) => typeof v === "string") as string[];
+}
+
+function parseDifficulty(value: unknown): Difficulty | null {
+  if (typeof value !== "string") return null;
+  const upper = value.toUpperCase();
+  return upper === "EASY" || upper === "MEDIUM" || upper === "HARD" ? (upper as Difficulty) : null;
+}
+
+function parseStatus(value: unknown): RecipeStatus | null {
+  if (typeof value !== "string") return null;
+  const upper = value.toUpperCase();
+  return upper === "DRAFT" || upper === "PUBLISHED" ? (upper as RecipeStatus) : null;
+}
+
+function toJsonValue(value: unknown): Prisma.InputJsonValue {
+  return (value === undefined ? null : value) as Prisma.InputJsonValue;
+}
 
 async function getUserFromToken(request: NextRequest) {
   try {
@@ -23,12 +80,12 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getUserFromToken(request);
     const { searchParams } = new URL(request.url);
-    
+
     const category = searchParams.get("category");
     const search = searchParams.get("search");
     const favorites = searchParams.get("favorites") === "true";
 
-    let where: any = {};
+    const where: Prisma.RecipeWhereInput = {};
 
     // User only sees PUBLISHED recipes, Admin sees all
     if (user?.role !== "ADMIN") {
@@ -65,7 +122,7 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      const recipes = favoritedRecipes.map((fav: any) => ({
+      const recipes = favoritedRecipes.map((fav) => ({
         ...fav.recipe,
         isFavorited: true,
         favoritesCount: fav.recipe._count.favoritedBy,
@@ -94,10 +151,10 @@ export async function GET(request: NextRequest) {
         where: { userId: user.sub },
         select: { recipeId: true },
       });
-      favoritedRecipeIds = userFavorites.map((fav: any) => fav.recipeId);
+      favoritedRecipeIds = userFavorites.map((fav) => fav.recipeId);
     }
 
-    const recipesWithFavorites = recipes.map((recipe: any) => ({
+    const recipesWithFavorites = recipes.map((recipe) => ({
       ...recipe,
       isFavorited: favoritedRecipeIds.includes(recipe.id),
       favoritesCount: recipe._count.favoritedBy,
@@ -122,36 +179,90 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const {
-      name,
-      category,
-      description,
-      image,
-      prepTime,
-      cookTime,
-      difficulty,
-      servings,
-      ingredients,
-      instructions,
-      nutrition,
-      status,
-      source,
-      tags,
-    } = body;
+    let name: string | null = null;
+    let category: string | null = null;
+    let description: string | null = null;
+    let image: string | null = null;
+    let prepTime: number | null = null;
+    let cookTime: number | null = null;
+    let difficulty: string | null = null;
+    let servings: number | null = null;
+    let ingredients: unknown = null;
+    let instructions: unknown = null;
+    let nutrition: unknown = null;
+    let status: string | null = null;
+    let source: string | null = null;
+    let tags: unknown = null;
+
+    // Try reading form-data first (file upload flow)
+    let photoUrl: string | null = null;
+    try {
+      const form = await request.formData();
+      if (form.has("name")) {
+        name = String(form.get("name") || "");
+        category = String(form.get("category") || "");
+        description = String(form.get("description") || "");
+        image = String(form.get("image") || "") || null;
+        prepTime = parseNumber(form.get("prepTime"));
+        cookTime = parseNumber(form.get("cookTime"));
+        difficulty = String(form.get("difficulty") || "");
+        servings = parseNumber(form.get("servings"));
+        status = String(form.get("status") || "DRAFT");
+        source = form.get("source") ? String(form.get("source")) : null;
+        tags = parseJson(form.get("tags"));
+        ingredients = parseJson(form.get("ingredients"));
+        instructions = parseJson(form.get("instructions"));
+        nutrition = parseJson(form.get("nutrition"));
+
+        const photo = form.get("photo") as File | null;
+        if (photo && typeof photo.arrayBuffer === "function") {
+          const buffer = Buffer.from(await photo.arrayBuffer());
+          const uploadsDir = path.join(process.cwd(), "public", "uploads");
+          if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+          const safeName = `${Date.now()}-${photo.name || "photo"}`.replace(/[^a-zA-Z0-9_.-]/g, "-");
+          const filePath = path.join(uploadsDir, safeName);
+          await fs.promises.writeFile(filePath, buffer);
+          photoUrl = `/uploads/${safeName}`;
+        }
+      }
+    } catch {
+      // not form-data or no file — fallback to json
+    }
+
+    if (!name) {
+      const body = (await request.json()) as RecipeCreatePayload;
+      name = body.name;
+      category = body.category;
+      description = body.description;
+      image = body.image ?? null;
+      prepTime = Number(body.prepTime);
+      cookTime = Number(body.cookTime);
+      difficulty = body.difficulty;
+      servings = Number(body.servings);
+      ingredients = body.ingredients;
+      instructions = body.instructions;
+      nutrition = body.nutrition;
+      status = body.status ?? null;
+      source = body.source ?? null;
+      tags = body.tags ?? [];
+    }
 
     // Validation
+    const parsedDifficulty = parseDifficulty(difficulty);
+    const parsedStatus = parseStatus(status) || "DRAFT";
+
     if (
       !name ||
       !category ||
       !description ||
-      !prepTime ||
-      !cookTime ||
-      !difficulty ||
-      !servings ||
+      prepTime === null ||
+      cookTime === null ||
+      !parsedDifficulty ||
+      servings === null ||
       !ingredients ||
       !instructions ||
-      !nutrition
+      nutrition === null
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -164,17 +275,17 @@ export async function POST(request: NextRequest) {
         name,
         category,
         description,
-        image,
-        prepTime: parseInt(prepTime),
-        cookTime: parseInt(cookTime),
-        difficulty,
-        servings: parseInt(servings),
-        ingredients,
-        instructions,
-        nutrition,
-        status: status || "DRAFT",
+        image: photoUrl || image || null,
+        prepTime: parseInt(String(prepTime), 10),
+        cookTime: parseInt(String(cookTime), 10),
+        difficulty: parsedDifficulty,
+        servings: parseInt(String(servings), 10),
+        ingredients: toJsonValue(ingredients),
+        instructions: toJsonValue(instructions),
+        nutrition: toJsonValue(nutrition),
+        status: parsedStatus,
         source,
-        tags: tags || [],
+        tags: toStringArray(tags),
         authorId: user.sub,
       },
       include: {

@@ -13,8 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Admin/User Portal",
-  description: "Role-based portal with sign in and sign up access.",
+  title: {
+    default: "Lahap",
+    template: "%s • Lahap",
+  },
+  description:
+    "Lahap is a child nutrition monitoring app for parents: manage child profiles, log meals, and track feeding patterns over time.",
+  applicationName: "Lahap",
+  icons: {
+    icon: "/images/icon/logo.png",
+    apple: "/images/icon/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -22,14 +31,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const materialSymbolsHref =
+    "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap";
+
   return (
     <html lang="en">
       <head>
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preload" as="style" href={materialSymbolsHref} />
+        <link rel="stylesheet" href={materialSymbolsHref} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

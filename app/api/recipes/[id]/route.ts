@@ -1,10 +1,69 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Difficulty, Prisma, RecipeStatus } from "@prisma/client";
 import { jwtVerify } from "jose";
+import fs from "fs";
+import path from "path";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key"
 );
+
+type RecipeUpdatePayload = Partial<{
+  name: string;
+  category: string;
+  description: string;
+  image: string | null;
+  prepTime: number;
+  cookTime: number;
+  difficulty: string;
+  servings: number;
+  ingredients: unknown;
+  instructions: unknown;
+  nutrition: unknown;
+  status: string;
+  source: string | null;
+  tags: unknown;
+}>;
+
+function parseNumber(value: FormDataEntryValue | null): number | undefined {
+  if (value === null) return undefined;
+  const num = Number(String(value));
+  return Number.isFinite(num) ? num : undefined;
+}
+
+function parseJson(value: FormDataEntryValue | null): unknown {
+  if (value === null) return undefined;
+  const str = String(value);
+  try {
+    return JSON.parse(str);
+  } catch {
+    return undefined;
+  }
+}
+
+function toStringArray(value: unknown): string[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) return [];
+  return value.filter((v) => typeof v === "string") as string[];
+}
+
+function toJsonValue(value: unknown): Prisma.InputJsonValue | undefined {
+  if (value === undefined) return undefined;
+  return value as Prisma.InputJsonValue;
+}
+
+function parseDifficulty(value: unknown): Difficulty | undefined {
+  if (typeof value !== "string") return undefined;
+  const upper = value.toUpperCase();
+  return upper === "EASY" || upper === "MEDIUM" || upper === "HARD" ? (upper as Difficulty) : undefined;
+}
+
+function parseStatus(value: unknown): RecipeStatus | undefined {
+  if (typeof value !== "string") return undefined;
+  const upper = value.toUpperCase();
+  return upper === "DRAFT" || upper === "PUBLISHED" ? (upper as RecipeStatus) : undefined;
+}
 
 async function getUserFromToken(request: NextRequest) {
   try {
@@ -98,7 +157,45 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const body = await request.json();
+    // Try formData first (file upload)
+    let body: RecipeUpdatePayload | null = null;
+    let photoUrl: string | null = null;
+    try {
+      const form = await request.formData();
+      if (form.has("name")) {
+        body = {
+          name: String(form.get("name") || ""),
+          category: String(form.get("category") || ""),
+          description: String(form.get("description") || ""),
+          image: form.get("image") ? String(form.get("image")) : null,
+          prepTime: parseNumber(form.get("prepTime")),
+          cookTime: parseNumber(form.get("cookTime")),
+          difficulty: String(form.get("difficulty") || ""),
+          servings: parseNumber(form.get("servings")),
+          ingredients: parseJson(form.get("ingredients")) ?? [],
+          instructions: parseJson(form.get("instructions")) ?? [],
+          nutrition: parseJson(form.get("nutrition")) ?? null,
+          status: String(form.get("status") || ""),
+          source: form.get("source") ? String(form.get("source")) : null,
+          tags: parseJson(form.get("tags")) ?? [],
+        };
+
+        const photo = form.get("photo") as File | null;
+        if (photo && typeof photo.arrayBuffer === "function") {
+          const buffer = Buffer.from(await photo.arrayBuffer());
+          const uploadsDir = path.join(process.cwd(), "public", "uploads");
+          if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+          const safeName = `${Date.now()}-${photo.name || "photo"}`.replace(/[^a-zA-Z0-9_.-]/g, "-");
+          const filePath = path.join(uploadsDir, safeName);
+          await fs.promises.writeFile(filePath, buffer);
+          photoUrl = `/uploads/${safeName}`;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    if (!body) body = (await request.json()) as RecipeUpdatePayload;
 
     const recipe = await prisma.recipe.findUnique({
       where: { id },
@@ -114,17 +211,17 @@ export async function PUT(
         name: body.name,
         category: body.category,
         description: body.description,
-        image: body.image,
-        prepTime: body.prepTime ? parseInt(body.prepTime) : undefined,
-        cookTime: body.cookTime ? parseInt(body.cookTime) : undefined,
-        difficulty: body.difficulty,
-        servings: body.servings ? parseInt(body.servings) : undefined,
-        ingredients: body.ingredients,
-        instructions: body.instructions,
-        nutrition: body.nutrition,
-        status: body.status,
+        image: photoUrl || body.image || null,
+        prepTime: body.prepTime !== undefined ? parseInt(String(body.prepTime), 10) : undefined,
+        cookTime: body.cookTime !== undefined ? parseInt(String(body.cookTime), 10) : undefined,
+        difficulty: parseDifficulty(body.difficulty),
+        servings: body.servings !== undefined ? parseInt(String(body.servings), 10) : undefined,
+        ingredients: toJsonValue(body.ingredients),
+        instructions: toJsonValue(body.instructions),
+        nutrition: toJsonValue(body.nutrition),
+        status: parseStatus(body.status),
         source: body.source,
-        tags: body.tags,
+        tags: toStringArray(body.tags),
       },
       include: {
         author: {

@@ -1,20 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import AppLayout from "@/app/_components/AppLayout";
-
-interface Ingredient {
-  name: string;
-  amount: string;
-  unit: string;
-}
-
-interface Instruction {
-  step: number;
-  description: string;
-}
+import type { Ingredient, Instruction } from "../../_lib/recipeTypes";
+import { recipeCategoryOptions, recipeDifficultyOptions } from "../../_lib/recipeTypes";
 
 export default function EditRecipePage() {
   const router = useRouter();
@@ -28,6 +19,9 @@ export default function EditRecipePage() {
   const [category, setCategory] = useState("Main Course");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
   const [prepTime, setPrepTime] = useState("");
   const [cookTime, setCookTime] = useState("");
   const [difficulty, setDifficulty] = useState("EASY");
@@ -53,11 +47,7 @@ export default function EditRecipePage() {
   const [sugar, setSugar] = useState("");
   const [sodium, setSodium] = useState("");
 
-  useEffect(() => {
-    fetchRecipe();
-  }, [recipeId]);
-
-  const fetchRecipe = async () => {
+  const fetchRecipe = useCallback(async () => {
     try {
       const response = await fetch(`/api/recipes/${recipeId}`);
       if (response.ok) {
@@ -94,7 +84,18 @@ export default function EditRecipePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [recipeId, router]);
+
+  useEffect(() => {
+    if (!photoFile) return setPreview(image || null);
+    const url = URL.createObjectURL(photoFile);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photoFile, image]);
+
+  useEffect(() => {
+    fetchRecipe();
+  }, [fetchRecipe]);
 
   const addIngredient = () => {
     setIngredients([...ingredients, { name: "", amount: "", unit: "" }]);
@@ -143,42 +144,45 @@ export default function EditRecipePage() {
     setSaving(true);
 
     try {
+      const form = new FormData();
+      form.append("name", name);
+      form.append("category", category);
+      form.append("description", description);
+      form.append("prepTime", String(parseInt(prepTime || "0")));
+      form.append("cookTime", String(parseInt(cookTime || "0")));
+      form.append("difficulty", difficulty);
+      form.append("servings", String(parseInt(servings || "0")));
+      form.append("status", status);
+      if (source) form.append("source", source);
+      form.append("tags", JSON.stringify(tags.split(",").map((t) => t.trim()).filter(Boolean)));
+      form.append("ingredients", JSON.stringify(ingredients));
+      form.append("instructions", JSON.stringify(instructions));
+      form.append(
+        "nutrition",
+        JSON.stringify({
+          calories: parseFloat(calories || "0"),
+          fat: parseFloat(fat || "0"),
+          protein: parseFloat(protein || "0"),
+          carbs: parseFloat(carbs || "0"),
+          fiber: parseFloat(fiber || "0"),
+          sugar: sugar ? parseFloat(sugar) : undefined,
+          sodium: sodium ? parseFloat(sodium) : undefined,
+        })
+      );
+
+      if (photoFile) form.append("photo", photoFile);
+      else if (image) form.append("image", image);
+
       const response = await fetch(`/api/recipes/${recipeId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          category,
-          description,
-          image: image || null,
-          prepTime: parseInt(prepTime),
-          cookTime: parseInt(cookTime),
-          difficulty,
-          servings: parseInt(servings),
-          ingredients,
-          instructions,
-          nutrition: {
-            calories: parseFloat(calories),
-            fat: parseFloat(fat),
-            protein: parseFloat(protein),
-            carbs: parseFloat(carbs),
-            fiber: parseFloat(fiber),
-            sugar: sugar ? parseFloat(sugar) : undefined,
-            sodium: sodium ? parseFloat(sodium) : undefined,
-          },
-          status,
-          source: source || null,
-          tags: tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
-        }),
+        body: form,
       });
 
       if (response.ok) {
         router.push("/recipes");
       } else {
-        alert("Failed to update recipe");
+        const err = await response.json().catch(() => null);
+        alert(err?.error || "Failed to update recipe");
       }
     } catch (error) {
       console.error("Error updating recipe:", error);
@@ -186,6 +190,25 @@ export default function EditRecipePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage("");
+    const f = e.target.files?.[0] || null;
+    if (!f) return setPhotoFile(null);
+    const max = 5 * 1024 * 1024;
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (f.size > max) {
+      setMessage("Image too large (max 5MB)");
+      e.currentTarget.value = "";
+      return;
+    }
+    if (f.type && !allowed.includes(f.type)) {
+      setMessage("Invalid image type. Use JPG/PNG/WEBP");
+      e.currentTarget.value = "";
+      return;
+    }
+    setPhotoFile(f);
   };
 
   if (loading) {
@@ -203,26 +226,26 @@ export default function EditRecipePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <Link
             href="/recipes"
-            className="inline-flex items-center gap-2 text-gray-900 hover:text-blue-600 mb-6 font-medium"
+            className="inline-flex items-center gap-2 text-gray-900 hover:text-blue-600 mb-6 font-medium text-sm md:text-base"
           >
             ← Back to Recipes
           </Link>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Recipe</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Edit Recipe</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
                 Basic Information
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Recipe Name *
                   </label>
                   <input
@@ -234,9 +257,9 @@ export default function EditRecipePage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                    <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                       Category *
                     </label>
                     <select
@@ -245,16 +268,16 @@ export default function EditRecipePage() {
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     >
-                      <option>Soup</option>
-                      <option>Main Course</option>
-                      <option>Dessert</option>
-                      <option>Salad</option>
-                      <option>Appetizer</option>
+                      {recipeCategoryOptions.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                    <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                       Difficulty *
                     </label>
                     <select
@@ -263,15 +286,17 @@ export default function EditRecipePage() {
                       onChange={(e) => setDifficulty(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                     >
-                      <option value="EASY">Easy</option>
-                      <option value="MEDIUM">Medium</option>
-                      <option value="HARD">Hard</option>
+                      {recipeDifficultyOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Description *
                   </label>
                   <textarea
@@ -284,21 +309,43 @@ export default function EditRecipePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
-                    Image URL
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
+                    Recipe Image
                   </label>
-                  <input
-                    type="text"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    placeholder="/images/recipes/example.jpg"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  />
+                  <div className="flex items-center gap-4">
+                    <div className="w-36 h-36 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                      {preview ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={preview} alt="preview" className="w-full h-full object-cover" />
+                      ) : image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={image} alt="current" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-gray-400 text-sm">No image</div>
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <input type="file" accept="image/*" onChange={handleFileChange} />
+                      {message && <div className="text-xs text-red-500 mt-2">{message}</div>}
+                      <div className="text-xs text-gray-400 mt-2">JPEG, PNG, or WEBP — up to 5MB</div>
+                      <div className="mt-2">
+                        <label className="block text-xs text-gray-600">Or provide an existing image path</label>
+                        <input
+                          type="text"
+                          value={image}
+                          onChange={(e) => setImage(e.target.value)}
+                          placeholder="/images/recipes/example.jpg"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                    <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                       Prep Time (min) *
                     </label>
                     <input
@@ -310,7 +357,7 @@ export default function EditRecipePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                    <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                       Cook Time (min) *
                     </label>
                     <input
@@ -322,7 +369,7 @@ export default function EditRecipePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                    <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                       Servings *
                     </label>
                     <input
@@ -336,7 +383,7 @@ export default function EditRecipePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Tags (comma separated)
                   </label>
                   <input
@@ -349,7 +396,7 @@ export default function EditRecipePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Source (optional)
                   </label>
                   <input
@@ -363,15 +410,15 @@ export default function EditRecipePage() {
             </div>
 
             {/* Ingredients */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900">
                   Ingredients
                 </h2>
                 <button
                   type="button"
                   onClick={addIngredient}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
                 >
                   + Add Ingredient
                 </button>
@@ -387,7 +434,7 @@ export default function EditRecipePage() {
                       onChange={(e) =>
                         updateIngredient(index, "name", e.target.value)
                       }
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      className="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                       required
                     />
                     <input
@@ -397,7 +444,7 @@ export default function EditRecipePage() {
                       onChange={(e) =>
                         updateIngredient(index, "amount", e.target.value)
                       }
-                      className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      className="w-32 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                       required
                     />
                     <input
@@ -407,7 +454,7 @@ export default function EditRecipePage() {
                       onChange={(e) =>
                         updateIngredient(index, "unit", e.target.value)
                       }
-                      className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      className="w-32 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                       required
                     />
                     <button
@@ -424,15 +471,15 @@ export default function EditRecipePage() {
             </div>
 
             {/* Instructions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900">
                   Preparation Steps
                 </h2>
                 <button
                   type="button"
                   onClick={addInstruction}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
                 >
                   + Add Step
                 </button>
@@ -441,7 +488,7 @@ export default function EditRecipePage() {
               <div className="space-y-3">
                 {instructions.map((instruction, index) => (
                   <div key={index} className="flex gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold shrink-0 mt-2">
+                    <div className="flex items-center justify-center size-8 md:size-10 bg-blue-600 text-white rounded-full font-bold shrink-0 mt-2">
                       {instruction.step}
                     </div>
                     <textarea
@@ -449,7 +496,7 @@ export default function EditRecipePage() {
                       value={instruction.description}
                       onChange={(e) => updateInstruction(index, e.target.value)}
                       rows={3}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      className="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                       required
                     />
                     <button
@@ -466,13 +513,13 @@ export default function EditRecipePage() {
             </div>
 
             {/* Nutrition */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
                 Nutrition Information
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Calories *
                   </label>
                   <input
@@ -485,7 +532,7 @@ export default function EditRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Fat (g) *
                   </label>
                   <input
@@ -498,7 +545,7 @@ export default function EditRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Protein (g) *
                   </label>
                   <input
@@ -511,7 +558,7 @@ export default function EditRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Carbs (g) *
                   </label>
                   <input
@@ -524,7 +571,7 @@ export default function EditRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Fiber (g) *
                   </label>
                   <input
@@ -537,7 +584,7 @@ export default function EditRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Sugar (g)
                   </label>
                   <input
@@ -549,7 +596,7 @@ export default function EditRecipePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-900 mb-1">
                     Sodium (mg)
                   </label>
                   <input
@@ -568,13 +615,13 @@ export default function EditRecipePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
+                className="px-4 md:px-6 py-2 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium text-sm md:text-base"
               >
                 {saving ? "Saving..." : "Update Recipe"}
               </button>
               <Link
                 href="/recipes"
-                className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="px-4 md:px-6 py-2 md:py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm md:text-base"
               >
                 Cancel
               </Link>
