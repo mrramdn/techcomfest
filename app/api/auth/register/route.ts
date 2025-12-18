@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sessionCookieOptions, signSession } from "@/lib/jwt";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { name, email, password, profilePicture } = await request.json();
 
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
         success: true,
         message: "Account created.",
         user,
-        redirectUrl: "/home",
+        redirectUrl: "/auth/complete",
       },
       { status: 201 },
     );

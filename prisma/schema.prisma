@@ -13,16 +13,18 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(uuid())
-  name            String
-  email           String    @unique
-  profilePicture  String?   @db.VarChar(512)
-  hashedPassword  String
-  role            Role      @default(USER)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  createdRecipes  Recipe[]  @relation("RecipeAuthor")
-  favoritedRecipes FavoriteRecipe[]
+  id                  String               @id @default(uuid())
+  name                String
+  email               String               @unique
+  profilePicture      String?              @db.VarChar(512)
+  hashedPassword      String
+  role                Role                 @default(USER)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  createdRecipes      Recipe[]             @relation("RecipeAuthor")
+  favoritedRecipes    FavoriteRecipe[]
+  children            Child[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Session {
@@ -32,41 +34,54 @@ model Session {
   expires      DateTime
 }
 
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires   DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
 enum Role {
   USER
   ADMIN
 }
 
 model Recipe {
-  id              String    @id @default(uuid())
-  name            String
-  category        String
-  description     String    @db.Text
-  image           String?
-  prepTime        Int       // in minutes
-  cookTime        Int       // in minutes
-  difficulty      Difficulty
-  servings        Int
-  
+  id          String     @id @default(uuid())
+  name        String
+  category    String
+  description String     @db.Text
+  image       String?
+  prepTime    Int // in minutes
+  cookTime    Int // in minutes
+  difficulty  Difficulty
+  servings    Int
+
   // JSON fields for complex data
-  ingredients     Json      // Array of {name: string, amount: string, unit: string}
-  instructions    Json      // Array of {step: number, description: string}
-  nutrition       Json      // {calories: number, fat: number, protein: number, carbs: number, fiber: number, sugar?: number, sodium?: number}
-  
+  ingredients  Json // Array of {name: string, amount: string, unit: string}
+  instructions Json // Array of {step: number, description: string}
+  nutrition    Json // {calories: number, fat: number, protein: number, carbs: number, fiber: number, sugar?: number, sodium?: number}
+
   // Metadata
-  views           Int       @default(0)
-  status          RecipeStatus @default(DRAFT)
-  source          String?
-  tags            String[]  @default([])
-  
+  views  Int          @default(0)
+  status RecipeStatus @default(DRAFT)
+  source String?
+  tags   String[]     @default([])
+
   // Relations
-  authorId        String
-  author          User      @relation("RecipeAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  favoritedBy     FavoriteRecipe[]
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  authorId    String
+  author      User             @relation("RecipeAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  favoritedBy FavoriteRecipe[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([authorId])
   @@index([status])
   @@index([category])
@@ -79,7 +94,7 @@ model FavoriteRecipe {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
-  
+
   @@unique([userId, recipeId])
   @@index([userId])
   @@index([recipeId])
@@ -94,5 +109,154 @@ enum Difficulty {
 enum RecipeStatus {
   DRAFT
   PUBLISHED
+  ARCHIVED
+}
+
+model Child {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Basic Information
+  photo  String?
+  name   String
+  gender Gender
+  age    Int // in months
+  height Float // in cm
+  weight Float // in kg
+
+  // Preferences
+  favoriteFood String?
+  hatedFood    String?
+
+  // Health Conditions
+  foodAllergies       String[]            @default([])
+  refusalBehaviors    String[]            @default([]) // close_mouth, turn_away, push_spoon
+  mealDuration        MealDuration
+  texturePreference   TexturePreference
+  eatingPatternChange EatingPatternChange
+  weightEnergyLevel   WeightEnergyLevel
+
+  // Relations
+  mealLogs MealLog[]
+  reports  Report[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model MealLog {
+  id      String @id @default(uuid())
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  // Meal Information
+  photo         String?
+  foodName      String
+  mealTime      MealTime
+  childResponse ChildResponse
+  notes         String?       @db.Text
+
+  // Timestamp
+  loggedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([childId])
+  @@index([loggedAt])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MealDuration {
+  LESS_THAN_10
+  TEN_TO_TWENTY
+  TWENTY_TO_THIRTY
+  MORE_THAN_30
+}
+
+enum TexturePreference {
+  PUREED
+  SOFT_MASHED
+  SEMI_CHUNKY
+  SOLID_FINGER_FOOD
+}
+
+enum EatingPatternChange {
+  NO
+  SLIGHTLY
+  MODERATELY
+  SIGNIFICANTLY
+}
+
+enum WeightEnergyLevel {
+  NORMAL_WEIGHT
+  WEIGHT_STAGNANT
+  WEIGHT_DECREASING
+}
+
+enum MealTime {
+  BREAKFAST
+  LUNCH
+  DINNER
+}
+
+enum ChildResponse {
+  FINISHED
+  PARTIALLY
+  REFUSED
+}
+
+model Report {
+  id      String @id @default(uuid())
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  // Report Information
+  reportType ReportType
+  period     String // e.g., "2025-W50", "2025-12"
+  startDate  DateTime
+  endDate    DateTime
+
+  // Report Data (JSON format for flexibility)
+  summary         Json // Summary statistics
+  insights        Json // AI-generated insights
+  recommendations Json // Dietary recommendations
+  mealDetails     Json // Array of {photo, foodName, mealTime, childResponse, loggedAt}
+
+  // Metrics
+  totalMeals    Int @default(0)
+  mealsFinished Int @default(0)
+  mealsPartial  Int @default(0)
+  mealsRefused  Int @default(0)
+
+  // Status
+  status ReportStatus @default(GENERATED)
+
+  // Timestamps
+  generatedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([childId, reportType, period])
+  @@index([childId])
+  @@index([reportType])
+  @@index([generatedAt])
+}
+
+enum ReportType {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ReportStatus {
+  GENERATED
+  VIEWED
   ARCHIVED
 }

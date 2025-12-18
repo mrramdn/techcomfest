@@ -1,24 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lahap
+
+Lahap is a child nutrition monitoring app for parents: manage child profiles, log meals, and track feeding patterns over time.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js + pnpm
+- PostgreSQL
+
+### Environment variables
+Create `.env.local`:
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME"
+JWT_SECRET="change-me"
+```
+
+### Run locally
+First, generate Prisma client and start the dev server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm prisma generate
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Database
+If you need to apply schema changes locally:
+```bash
+pnpm db:migrate
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To seed an admin/user for development:
+```bash
+pnpm db:seed
+```
+
+## App Areas
+- ` /recipes` (admin + user-facing recipes)
+- ` /track` (user-only child meal tracking)
 
 ## Learn More
 

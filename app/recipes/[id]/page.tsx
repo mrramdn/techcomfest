@@ -1,43 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import AppLayout, { useUser } from "../../_components/AppLayout";
-
-interface Recipe {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  image: string | null;
-  prepTime: number;
-  cookTime: number;
-  difficulty: string;
-  servings: number;
-  views: number;
-  status: string;
-  ingredients: Array<{ name: string; amount: string; unit: string }>;
-  instructions: Array<{ step: number; description: string }>;
-  nutrition: {
-    calories: number;
-    fat: number;
-    protein: number;
-    carbs: number;
-    fiber: number;
-    sugar?: number;
-    sodium?: number;
-  };
-  tags: string[];
-  isFavorited: boolean;
-  favoritesCount: number;
-  author: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
+import type { RecipeDetail } from "../_lib/recipeTypes";
 
 export default function RecipeDetailPage({
   params,
@@ -46,7 +14,7 @@ export default function RecipeDetailPage({
 }) {
   const router = useRouter();
   const user = useUser();
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(
     null
@@ -56,13 +24,7 @@ export default function RecipeDetailPage({
     params.then(setResolvedParams);
   }, [params]);
 
-  useEffect(() => {
-    if (resolvedParams?.id) {
-      fetchRecipe();
-    }
-  }, [resolvedParams]);
-
-  const fetchRecipe = async () => {
+  const fetchRecipe = useCallback(async () => {
     if (!resolvedParams?.id) return;
 
     try {
@@ -78,7 +40,13 @@ export default function RecipeDetailPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [resolvedParams, router]);
+
+  useEffect(() => {
+    if (resolvedParams?.id) {
+      fetchRecipe();
+    }
+  }, [fetchRecipe, resolvedParams]);
 
   const toggleFavorite = async () => {
     if (!recipe) return;

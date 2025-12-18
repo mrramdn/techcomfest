@@ -44,7 +44,6 @@ export default function NotFound() {
 
     if (user?.role === "USER") {
       return [
-        { name: "Home", path: "/", icon: "home" },
         { name: "Track", path: "/track", icon: "conversion_path" },
         ...baseLinks.slice(1),
       ];
