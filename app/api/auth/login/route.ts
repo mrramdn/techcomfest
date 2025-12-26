@@ -5,7 +5,11 @@ import { sessionCookieOptions, signSession } from "@/lib/jwt";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, rememberMe } = (await request.json()) as {
+      email?: string;
+      password?: string;
+      rememberMe?: boolean;
+    };
 
     if (!email || !password) {
       return NextResponse.json(
@@ -44,13 +48,15 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { hashedPassword, ...safeUser } = user;
 
+    const remember = rememberMe !== false;
+
     const token = signSession({
       sub: safeUser.id,
       email: safeUser.email,
       role: safeUser.role,
       name: safeUser.name,
       profilePicture: safeUser.profilePicture ?? undefined,
-    });
+    }, remember ? "30d" : "1d");
 
     const response = NextResponse.json(
       {
@@ -62,7 +68,7 @@ export async function POST(request: NextRequest) {
       { status: 200 },
     );
 
-    response.cookies.set("session-token", token, sessionCookieOptions());
+    response.cookies.set("session-token", token, sessionCookieOptions({ rememberMe: remember }));
 
     return response;
   } catch (error) {

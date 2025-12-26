@@ -89,7 +89,7 @@ export default function AppLayout({ children, showHeader = true }: AppLayoutProp
           <>
             {/* Fixed header at top (works even if ancestors have overflow) */}
             <header
-              className={`${headerFloating ? "absolute" : "fixed"} top-0 left-0 right-0 z-50 w-full bg-white/95 backdrop-blur border-b border-gray-200`}
+              className={`${headerFloating ? "absolute" : "fixed"} top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-200`}
             >
               <div className="flex w-full">
                 {/* Sidebar Logo desktop */}

@@ -17,6 +17,15 @@ const adapter = new PrismaPg(pool);
 
 const prisma = new PrismaClient({ adapter });
 
+function getIsoWeekPeriod(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
 async function main() {
   const email = "admin@example.com";
   const password = "admin123";
@@ -271,9 +280,334 @@ async function main() {
     });
   }
 
+  // Seed sample articles
+  await prisma.favoriteArticle.deleteMany({}).catch(() => null);
+  await prisma.article.deleteMany({}).catch(() => null);
+
+  const user = await prisma.user.findUnique({
+    where: { email: userEmail },
+  });
+
+  const articles = [
+    {
+      title: "Starting Solids: A Simple First Week Plan",
+      category: "FEEDING",
+      content: `
+        <h2>Week 1 goals</h2>
+        <p>Keep it simple: one ingredient at a time, small portions, and focus on a calm routine.</p>
+        <ul>
+          <li>Offer 1–2 teaspoons per meal.</li>
+          <li>Try one new food every 1–2 days.</li>
+          <li>Watch for texture readiness and gagging vs. choking signs.</li>
+        </ul>
+        <p>Consistency matters more than quantity at the start.</p>
+      `.trim(),
+      thumbnailImage: "/images/recipes/vegetable-soup.jpg",
+      heroImage: "/images/landing/bg.png",
+      status: "PUBLISHED",
+      views: 128,
+      authorId: admin.id,
+    },
+    {
+      title: "Balanced Nutrition for Toddlers (Quick Checklist)",
+      category: "NUTRITION",
+      content: `
+        <p>Use this quick checklist to build balanced meals:</p>
+        <ol>
+          <li><strong>Protein</strong>: eggs, fish, chicken, tofu, beans</li>
+          <li><strong>Carbs</strong>: rice, potatoes, oats, whole grains</li>
+          <li><strong>Veg + Fruit</strong>: varied colors across the week</li>
+          <li><strong>Healthy fats</strong>: avocado, olive oil, nut butters (age-appropriate)</li>
+        </ol>
+        <p>Rotate foods to reduce pickiness and expand preferences.</p>
+      `.trim(),
+      thumbnailImage: "/images/recipes/buddha-bowl.jpg",
+      heroImage: "/images/recipes/buddha-bowl.jpg",
+      status: "PUBLISHED",
+      views: 76,
+      authorId: admin.id,
+    },
+    {
+      title: "Hydration Basics: Water, Milk, and When to Worry",
+      category: "HEALTH",
+      content: `
+        <p>Hydration needs vary by age, activity, and weather. Aim for frequent small sips.</p>
+        <p><strong>Call your pediatrician</strong> if you notice very low urine output, lethargy, or persistent vomiting/diarrhea.</p>
+      `.trim(),
+      thumbnailImage: "/images/landing/bg.png",
+      heroImage: "/images/landing/bg.png",
+      status: "PUBLISHED",
+      views: 34,
+      authorId: admin.id,
+    },
+    {
+      title: "Texture Progression: From Purees to Finger Foods",
+      category: "DEVELOPMENT",
+      content: `
+        <p>Gradually increasing texture helps chewing skills develop.</p>
+        <ul>
+          <li>Smooth puree → mashed → soft lumps</li>
+          <li>Soft finger foods (banana, steamed veg sticks)</li>
+          <li>Mixed textures (rice + veg + protein)</li>
+        </ul>
+        <p>Move at your child's pace and keep meals supervised.</p>
+      `.trim(),
+      thumbnailImage: "/images/recipes/grilled-salmon.jpg",
+      heroImage: "/images/recipes/grilled-salmon.jpg",
+      status: "PUBLISHED",
+      views: 59,
+      authorId: admin.id,
+    },
+    {
+      title: "Meal Prep Tips: Save Time Without Losing Variety",
+      category: "TIPS",
+      content: `
+        <p>Batch-cook staples (rice, shredded chicken, roasted veggies) and mix-and-match through the week.</p>
+        <p>Freeze in small portions for quick weekday meals.</p>
+      `.trim(),
+      thumbnailImage: "/images/recipes/vegetable-soup.jpg",
+      heroImage: "/images/recipes/vegetable-soup.jpg",
+      status: "PUBLISHED",
+      views: 21,
+      authorId: admin.id,
+    },
+  ];
+
+  const createdArticles = [];
+  for (const articleData of articles) {
+    createdArticles.push(
+      await prisma.article.create({
+        data: articleData,
+      }),
+    );
+  }
+
+  // Seed a few favorites for the sample user
+  if (user && createdArticles.length > 0) {
+    await prisma.favoriteArticle.createMany({
+      data: createdArticles.slice(0, 2).map((a) => ({
+        userId: user.id,
+        articleId: a.id,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
   console.log("Seeded admin:", email, "password:", password);
   console.log("Seeded user:", userEmail, "password:", userPassword);
   console.log("Seeded", recipes.length, "sample recipes");
+  console.log("Seeded", articles.length, "sample articles");
+
+  // Seed forum posts + comments
+  await prisma.forumPostLike.deleteMany({}).catch(() => null);
+  await prisma.forumPostVote.deleteMany({}).catch(() => null);
+  await prisma.forumComment.deleteMany({}).catch(() => null);
+  await prisma.forumPost.deleteMany({}).catch(() => null);
+
+  const forumPosts = [
+    {
+      content:
+        "My baby gags a lot when trying slightly lumpy textures. Is this normal? Any tips for progressing safely?",
+      authorId: user?.id || admin.id,
+    },
+    {
+      content:
+        "What are your go-to quick breakfast ideas for toddlers on busy weekdays?",
+      authorId: user?.id || admin.id,
+    },
+    {
+      content:
+        "Anyone dealing with picky eating suddenly at 18–24 months? What helped you the most?",
+      authorId: admin.id,
+    },
+  ];
+
+  const createdPosts = [];
+  for (const p of forumPosts) {
+    createdPosts.push(await prisma.forumPost.create({ data: p }));
+  }
+
+  if (createdPosts[0]) {
+    const postId = createdPosts[0].id;
+    const now = new Date();
+
+    const comments = [
+      {
+        postId,
+        userId: admin.id,
+        content:
+          "Gagging can be part of learning textures. Try thicker purees first and increase texture gradually. Always supervise and keep portions small.",
+        createdAt: now,
+      },
+      {
+        postId,
+        userId: user?.id || admin.id,
+        content:
+          "We found it helped to offer one 'safe' food alongside the new texture, and let them explore with hands first.",
+        createdAt: now,
+      },
+      {
+        postId,
+        userId: admin.id,
+        content:
+          "If gagging is frequent with distress or you suspect swallowing issues, consider asking your pediatrician about feeding therapy assessment.",
+        createdAt: now,
+      },
+    ];
+
+    for (const c of comments) {
+      await prisma.forumComment.create({ data: c });
+    }
+  }
+
+  if (user && createdPosts[1]) {
+    await prisma.forumPostLike.create({
+      data: { userId: user.id, postId: createdPosts[1].id },
+    });
+    await prisma.forumPostVote.create({
+      data: { userId: user.id, postId: createdPosts[1].id, value: 1 },
+    });
+  }
+
+  console.log("Seeded", forumPosts.length, "sample forum posts");
+
+  // Seed a child + meal logs + a report for the sample user
+  if (user) {
+    await prisma.child.deleteMany({ where: { userId: user.id } }).catch(() => null);
+
+    const child = await prisma.child.create({
+      data: {
+        userId: user.id,
+        photo: null,
+        name: "Ava",
+        gender: "FEMALE",
+        age: 18, // months
+        height: 80, // cm
+        weight: 10.4, // kg
+        favoriteFood: "Banana",
+        hatedFood: "Broccoli",
+        foodAllergies: ["dairy"],
+        refusalBehaviors: ["turn_away"],
+        mealDuration: "TEN_TO_TWENTY",
+        texturePreference: "SOFT_MASHED",
+        eatingPatternChange: "SLIGHTLY",
+        weightEnergyLevel: "NORMAL_WEIGHT",
+      },
+    });
+
+    const now = new Date();
+    const logs = [
+      {
+        childId: child.id,
+        photo: null,
+        foodName: "Oatmeal + banana",
+        mealTime: "BREAKFAST",
+        childResponse: "FINISHED",
+        notes: "Ate well and asked for more.",
+        loggedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 1),
+      },
+      {
+        childId: child.id,
+        photo: null,
+        foodName: "Rice + chicken + carrots",
+        mealTime: "LUNCH",
+        childResponse: "PARTIALLY",
+        notes: "Ate chicken and rice, refused carrots.",
+        loggedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 1),
+      },
+      {
+        childId: child.id,
+        photo: null,
+        foodName: "Yogurt + berries",
+        mealTime: "DINNER",
+        childResponse: "REFUSED",
+        notes: "Refused today (possible teething).",
+        loggedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2),
+      },
+      {
+        childId: child.id,
+        photo: null,
+        foodName: "Scrambled eggs + toast",
+        mealTime: "BREAKFAST",
+        childResponse: "FINISHED",
+        notes: "Loved it.",
+        loggedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 3),
+      },
+      {
+        childId: child.id,
+        photo: null,
+        foodName: "Soup (veggies blended)",
+        mealTime: "DINNER",
+        childResponse: "PARTIALLY",
+        notes: "Did okay with thicker texture.",
+        loggedAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 4),
+      },
+    ];
+
+    for (const log of logs) {
+      await prisma.mealLog.create({ data: log });
+    }
+
+    const totalMeals = logs.length;
+    const mealsFinished = logs.filter((l) => l.childResponse === "FINISHED").length;
+    const mealsPartial = logs.filter((l) => l.childResponse === "PARTIALLY").length;
+    const mealsRefused = logs.filter((l) => l.childResponse === "REFUSED").length;
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    const period = getIsoWeekPeriod(endDate);
+
+    await prisma.report.create({
+      data: {
+        childId: child.id,
+        reportType: "WEEKLY",
+        period,
+        startDate,
+        endDate,
+        summary: {
+          totalMeals,
+          mealsFinished,
+          mealsPartial,
+          mealsRefused,
+        },
+        insights: {
+          highlights: [
+            "Good breakfast consistency",
+            "Some refusal at dinner; may be related to teething or fatigue",
+          ],
+          patterns: [
+            "Prefers softer textures",
+            "More likely to refuse veggies when mixed as chunks",
+          ],
+        },
+        recommendations: {
+          nextSteps: [
+            "Keep one safe food alongside new textures",
+            "Offer veggies in mixed textures (mashed + soft chunks)",
+            "Maintain calm mealtime routine and avoid pressure",
+          ],
+        },
+        mealDetails: logs.map((l) => ({
+          photo: l.photo,
+          foodName: l.foodName,
+          mealTime: l.mealTime,
+          childResponse: l.childResponse,
+          loggedAt: l.loggedAt,
+        })),
+        totalMeals,
+        mealsFinished,
+        mealsPartial,
+        mealsRefused,
+        status: "GENERATED",
+      },
+    });
+
+    console.log("Seeded 1 child +", logs.length, "meal logs + 1 weekly report for user");
+  }
 }
 
 main()

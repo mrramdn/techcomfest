@@ -32,13 +32,21 @@ export async function verifySessionEdge(token: string) {
   return payload as SessionPayload & { exp?: number; iat?: number };
 }
 
-export function sessionCookieOptions() {
+export function sessionCookieOptions(opts?: { rememberMe?: boolean }) {
   const isProd = process.env.NODE_ENV === "production";
-  return {
+  const rememberMe = opts?.rememberMe;
+  const base = {
     httpOnly: true,
     secure: isProd,
     sameSite: "lax" as const,
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
   };
+
+  // Backward-compatible behavior:
+  // - rememberMe === true  -> persistent (30 days)
+  // - rememberMe === false -> session cookie (cleared on browser close)
+  // - rememberMe undefined -> default (7 days, previous behavior)
+  if (rememberMe === true) return { ...base, maxAge: 60 * 60 * 24 * 30 };
+  if (rememberMe === false) return base;
+  return { ...base, maxAge: 60 * 60 * 24 * 7 };
 }

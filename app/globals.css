@@ -118,3 +118,69 @@ body {
 .file-chooser {
   @apply inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 cursor-pointer hover:bg-gray-50;
 }
+
+/* Basic styling for rendered article HTML */
+.article-content h1,
+.article-content h2,
+.article-content h3 {
+  color: #111827; /* gray-900 */
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.article-content p {
+  margin: 0.75rem 0;
+}
+
+.article-content ul,
+.article-content ol {
+  margin: 0.75rem 0 0.75rem 1.25rem;
+}
+
+.article-content li {
+  margin: 0.25rem 0;
+}
+
+.article-content a {
+  color: #2563eb; /* blue-600 */
+  text-decoration: underline;
+}
+
+.article-content strong {
+  color: #111827; /* gray-900 */
+  font-weight: 700;
+}
+
+.article-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+.article-content blockquote {
+  border-left: 4px solid #e5e7eb; /* gray-200 */
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #4b5563; /* gray-600 */
+}
+
+/* Make interactive elements feel clickable across the app */
+a[href],
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}

@@ -15,30 +15,44 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME"
 JWT_SECRET="change-me"
 ```
 
+### Install
+```bash
+pnpm install
+```
+
 ### Run locally
-First, generate Prisma client and start the dev server:
+Generate Prisma client, apply migrations, then start the dev server:
 
 ```bash
-pnpm prisma generate
+pnpm db:generate
+pnpm db:migrate
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ### Database
-If you need to apply schema changes locally:
-```bash
-pnpm db:migrate
-```
-
 To seed an admin/user for development:
 ```bash
 pnpm db:seed
 ```
 
 ## App Areas
-- ` /recipes` (admin + user-facing recipes)
-- ` /track` (user-only child meal tracking)
+- `/recipes` (public read; admin CRUD; favorites + view count)
+- `/track` (user-only child meal tracking)
+- `/articles` (public read; admin CRUD; favorites + view count)
+- `/forum` (user posts + comments; trending; likes/votes)
+
+## Documentation
+- Docs index: `docs/README.md`
+- Articles API: `docs/articles-api.md`
+- Forum API: `docs/forum-api.md`
+- Recipes API: `docs/recipes-api.md`
+- Search API: `docs/search-api.md`
+
+## Notes
+- Authentication uses a JWT stored in the `session-token` cookie.
+- Some endpoints accept `multipart/form-data` uploads and write to `public/uploads` (served as `/uploads/...`).
 
 ## Learn More
 

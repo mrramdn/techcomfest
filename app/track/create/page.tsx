@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AppLayout, { useUser } from "../../_components/AppLayout";
+import BackLink from "@/app/_components/BackLink";
 import type {
   ChildPayload,
   EatingPatternChange,
@@ -111,11 +112,11 @@ function TrackCreateChildContent() {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+      <div className="w-full max-w-[1280px] mx-auto px-5 py-4">
+        <BackLink href="/track" label="Track" />
+      </div>
+      <div className="max-w-4xl mx-auto px-6 pb-10 space-y-6">
         <header className="space-y-2">
-          <Link href="/track" className="text-sm text-blue-600 hover:underline">
-            ← Back to Track
-          </Link>
           <h1 className="text-3xl font-semibold text-gray-900">Add Child</h1>
           <p className="text-sm text-gray-500">Create a child profile to start tracking meals.</p>
         </header>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import AppLayout, { useUser } from "../../_components/AppLayout";
+import BackLink from "@/app/_components/BackLink";
 import type { Child, ChildResponse, MealLog, MealLogPayload, MealTime } from "../_lib/trackTypes";
 import { mealTimeOptions, responseOptions } from "../_lib/trackTypes";
 
@@ -142,11 +143,11 @@ function TrackChildDetailContent() {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
+      <div className="w-full max-w-[1280px] mx-auto px-5 py-4">
+        <BackLink href="/track" label="Track" />
+      </div>
+      <div className="max-w-6xl mx-auto px-6 pb-10 space-y-8">
         <header className="space-y-3">
-          <Link href="/track" className="text-sm text-blue-600 hover:underline">
-            ← Back to Track
-          </Link>
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-3xl font-semibold text-gray-900">

@@ -51,29 +51,31 @@ export default function LandingPage() {
   if (user) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <div className="flex w-full relative">
-          {/* Sidebar Logo desktop */}
-          <button
-            onClick={() => router.push("/")}
-            className="hidden lg:flex w-64 h-20 bg-white border-b border-r border-gray-200 items-center px-5 hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-4">
-              <div className="size-8 rounded-lg overflow-hidden">
-                <Image
-                  src="/images/icon/logo.png"
-                  alt="Lahap Logo"
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-contain"
-                />
+        <header className="w-full bg-white border-b border-gray-200">
+          <div className="flex w-full relative">
+            {/* Sidebar Logo desktop */}
+            <button
+              onClick={() => router.push("/")}
+              className="hidden lg:flex w-64 h-20 bg-white border-r border-gray-200 items-center px-5 hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-4">
+                <div className="size-8 rounded-lg overflow-hidden">
+                  <Image
+                    src="/images/icon/logo.png"
+                    alt="Lahap Logo"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="text-black text-lg font-semibold">Lahap</div>
               </div>
-              <div className="text-black text-lg font-semibold">Lahap</div>
-            </div>
-          </button>
+            </button>
 
-          {/* Header */}
-          <Header user={user} currentPath="/" />
-        </div>
+            {/* Header */}
+            <Header user={user} currentPath="/" />
+          </div>
+        </header>
 
         {/* Main content */}
         <div className="flex-1">

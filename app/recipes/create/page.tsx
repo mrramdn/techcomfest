@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AppLayout from "@/app/_components/AppLayout";
+import BackLink from "@/app/_components/BackLink";
 import type { Ingredient, Instruction } from "../_lib/recipeTypes";
 import {
   recipeCategoryOptions,
@@ -159,14 +160,14 @@ export default function CreateRecipePage() {
     const f = e.target.files?.[0] || null;
     if (!f) return setPhotoFile(null);
     const max = 5 * 1024 * 1024;
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (f.size > max) {
       setMessage("Image too large (max 5MB)");
       e.currentTarget.value = "";
       return;
     }
-    if (f.type && !allowed.includes(f.type)) {
-      setMessage("Invalid image type. Use JPG/PNG/WEBP");
+    if (f.type && !allowed.includes(f.type) && !f.type.startsWith("image/")) {
+      setMessage("Invalid file type. Please choose an image.");
       e.currentTarget.value = "";
       return;
     }
@@ -175,14 +176,12 @@ export default function CreateRecipePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            href="/recipes"
-            className="inline-flex items-center gap-2 text-gray-900 hover:text-blue-600 mb-6 font-medium text-sm md:text-base"
-          >
-            ← Back to Recipes
-          </Link>
+      <div className="min-h-screen bg-gray-50">
+        <div className="w-full max-w-[1280px] mx-auto px-5 py-4">
+          <BackLink href="/recipes" label="Recipes" />
+        </div>
+
+        <div className="max-w-4xl mx-auto px-5 pb-16">
 
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
           Create New Recipe
@@ -595,8 +594,8 @@ export default function CreateRecipePage() {
             </Link>
           </div>
         </form>
+        </div>
       </div>
-    </div>
     </AppLayout>
   );
 }

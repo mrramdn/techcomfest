@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ConfirmModal from "./ConfirmModal";
 import NoticeModal from "./NoticeModal";
+import HeaderSearch from "./HeaderSearch";
 
 type User = {
   id: string;
@@ -37,6 +38,7 @@ export default function Header({ user, currentPath, onFloatingChange }: HeaderPr
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [isLogoutSuccessOpen, setIsLogoutSuccessOpen] = useState(false);
   const userInitial = user?.name?.trim()?.[0]?.toUpperCase() ?? "?";
@@ -46,21 +48,24 @@ export default function Header({ user, currentPath, onFloatingChange }: HeaderPr
   };
 
   useEffect(() => {
-    onFloatingChange?.(isDropdownOpen || isSidebarOpen);
-  }, [isDropdownOpen, isSidebarOpen, onFloatingChange]);
+    onFloatingChange?.(isDropdownOpen || isSidebarOpen || isSearchOpen);
+  }, [isDropdownOpen, isSidebarOpen, isSearchOpen, onFloatingChange]);
 
   const handleGo = (path: string) => {
     setIsDropdownOpen(false);
     router.push(path);
   };
 
-  const isActive = (path: string) => currentPath === path;
+  const isActive = (path: string) => {
+    if (path === "/") return currentPath === path;
+    return currentPath === path || currentPath.startsWith(`${path}/`);
+  };
 
   const menuItems = user?.role === "ADMIN" ? ADMIN_MENU_ITEMS : USER_MENU_ITEMS;
 
   return (
     <>
-      <div className="flex-1 px-5 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
+      <div className="flex-1 px-5 py-4 bg-white flex justify-between items-center">
         {/* Mobile burger + logo */}
         <div className="lg:hidden flex items-center gap-2.5">
           <button
@@ -102,16 +107,7 @@ export default function Header({ user, currentPath, onFloatingChange }: HeaderPr
 
         {/* Search + Profile */}
         <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center gap-2 h-12 w-96 pl-4 bg-slate-100 rounded-lg border border-gray-200">
-            <svg className="size-4 text-gray-400" viewBox="0 0 24 24" fill="none">
-              <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search..."
-              className="bg-transparent border-none outline-none text-sm w-32 lg:w-48 text-gray-700 placeholder:text-gray-400"
-            />
-          </div>
+          <HeaderSearch currentPath={currentPath} onOpenChange={setIsSearchOpen} />
 
           <div className="relative">
             <button
@@ -119,7 +115,7 @@ export default function Header({ user, currentPath, onFloatingChange }: HeaderPr
               className="h-12 w-64 px-1 flex items-center justify-between rounded-lg border border-gray-200 hover:bg-slate-200 transition-colors"
             >
               <div className="flex items-center gap-3 justify-start min-w-0">
-                <div className="size-9 rounded-sm overflow-hidden flex items-center justify-start outline -outline-offset-1 outline-gray-300 shrink-0">
+                <div className="size-10 rounded-md overflow-hidden flex items-center justify-start outline -outline-offset-1 outline-gray-300 shrink-0">
                   {user.profilePicture ? (
                     <Image
                       src={user.profilePicture}

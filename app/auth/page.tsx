@@ -24,6 +24,7 @@ function AuthPageContent() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -85,7 +86,7 @@ function AuthPageContent() {
         mode === "signin" ? "/api/auth/login" : "/api/auth/register";
       const body =
         mode === "signin"
-          ? { email, password }
+          ? { email, password, rememberMe }
           : { email, password, name: email.split("@")[0] };
 
       const res = await fetch(endpoint, {
@@ -268,8 +269,10 @@ function AuthPageContent() {
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
-                    type="radio"
+                    type="checkbox"
                     className="w-4 h-4 border-gray-300 text-blue-500 focus:ring-blue-500 accent-blue-500"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                   />
                   <span className="text-gray-400 text-sm font-normal leading-5">
                     Remember me

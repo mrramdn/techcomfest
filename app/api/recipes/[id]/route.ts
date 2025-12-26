@@ -84,6 +84,8 @@ export async function GET(
 ) {
   try {
     const user = await getUserFromToken(request);
+    const { searchParams } = new URL(request.url);
+    const noView = searchParams.get("noView") === "true";
     const { id } = await params;
 
     const recipe = await prisma.recipe.findUnique({
@@ -107,11 +109,13 @@ export async function GET(
       return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
     }
 
-    // Increment views
-    await prisma.recipe.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
+    const shouldIncrementViews = !(noView && user?.role === "ADMIN");
+    if (shouldIncrementViews) {
+      await prisma.recipe.update({
+        where: { id },
+        data: { views: { increment: 1 } },
+      });
+    }
 
     // Check if user favorited this recipe
     let isFavorited = false;
@@ -130,7 +134,7 @@ export async function GET(
     return NextResponse.json({
       recipe: {
         ...recipe,
-        views: recipe.views + 1, // Return incremented value
+        views: shouldIncrementViews ? recipe.views + 1 : recipe.views,
         isFavorited,
         favoritesCount: recipe._count.favoritedBy,
       },

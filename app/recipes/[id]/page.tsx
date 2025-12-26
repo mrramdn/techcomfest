@@ -1,17 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import AppLayout, { useUser } from "../../_components/AppLayout";
 import type { RecipeDetail } from "../_lib/recipeTypes";
+import BackLink from "@/app/_components/BackLink";
 
 export default function RecipeDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  return (
+    <AppLayout>
+      <RecipeDetailContent params={params} />
+    </AppLayout>
+  );
+}
+
+function RecipeDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const user = useUser();
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
@@ -65,107 +73,104 @@ export default function RecipeDetailPage({
     }
   };
 
-  const deleteRecipe = async () => {
-    if (!recipe || !confirm("Are you sure you want to delete this recipe?"))
-      return;
-
-    try {
-      const response = await fetch(`/api/recipes/${recipe.id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        router.push("/recipes");
-      }
-    } catch (error) {
-      console.error("Error deleting recipe:", error);
-    }
-  };
-
   if (loading) {
     return (
-      <AppLayout>
-        <div className="p-16 pt-8 pb-8">
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-500">Loading recipe...</p>
-          </div>
+      <div className="p-16 pt-8 pb-8">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">Loading recipe...</p>
         </div>
-      </AppLayout>
+      </div>
     );
   }
 
   if (!recipe) {
     return (
-      <AppLayout>
-        <div className="p-16 pt-8 pb-8">
-          <div className="text-center py-12">
-            <p className="text-gray-500">Recipe not found</p>
-          </div>
+      <div className="p-16 pt-8 pb-8">
+        <div className="text-center py-12">
+          <p className="text-gray-500">Recipe not found</p>
         </div>
-      </AppLayout>
+      </div>
     );
   }
 
+  const totalTime = recipe.prepTime + recipe.cookTime;
+  const canFavorite = !!user;
+  const difficultyLabel =
+    recipe.difficulty === "EASY"
+      ? "Easy"
+      : recipe.difficulty === "MEDIUM"
+      ? "Medium"
+      : "Hard";
+  const difficultyClass =
+    recipe.difficulty === "EASY"
+      ? "bg-green-200 text-green-600 outline-emerald-300"
+      : recipe.difficulty === "MEDIUM"
+      ? "bg-amber-200 text-amber-700 outline-amber-300"
+      : "bg-rose-200 text-rose-600 outline-rose-300";
+  const ingredientsText = recipe.ingredients.length
+    ? recipe.ingredients
+        .map((ingredient) =>
+          [ingredient.amount, ingredient.unit, ingredient.name]
+            .filter((part) => part && part.trim().length > 0)
+            .join(" ")
+        )
+        .join(", ")
+    : "No ingredients listed.";
+  const nutritionItems = [
+    { label: "Fat", value: recipe.nutrition.fat, unit: "g" },
+    { label: "Protein", value: recipe.nutrition.protein, unit: "g" },
+    { label: "Carbohydrates", value: recipe.nutrition.carbs, unit: "g" },
+    { label: "Fiber", value: recipe.nutrition.fiber, unit: "g" },
+  ].filter((item) => item.value !== undefined && item.value !== null);
+  const instructionTitle = (description: string) => {
+    const sentence = description.split(".")[0]?.trim();
+    return sentence || "Instruction";
+  };
+
   return (
-    <AppLayout>
-      <div className="p-16 pt-8 pb-8">
-        {/* Back Button */}
-        <Link
-          href="/recipes"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
-        >
-          <span className="material-symbols-outlined">arrow_back</span>
-          Back to Recipes
-        </Link>
-
-        {/* Hero Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Image */}
-          <div className="relative h-96 bg-slate-100 rounded-xl overflow-hidden">
-            {recipe.image ? (
-              <Image
-                src={recipe.image}
-                alt={recipe.name}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <span className="material-symbols-outlined text-9xl text-gray-300">
-                  restaurant
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Info */}
-          <div>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
-                    {recipe.category}
-                  </span>
-                  <span className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">
-                      local_fire_department
-                    </span>
-                    {recipe.nutrition.calories} kcal
+    <div className="min-h-screen bg-slate-50 overflow-hidden">
+      <div className="w-full mx-auto px-5 py-4">
+        <BackLink href="/recipes" label={recipe.name} className="max-w-72" />
+      </div>
+      <div className="w-full mx-auto px-5 pb-16">
+        <div className="rounded-4xl flex flex-col gap-6">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            <div className="relative w-full h-72 lg:w-80 lg:h-80 rounded-2xl overflow-hidden bg-slate-100">
+              {recipe.image ? (
+                <Image
+                  src={recipe.image}
+                  alt={recipe.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <span className="material-symbols-outlined text-8xl text-gray-300">
+                    restaurant
                   </span>
                 </div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  {recipe.name}
-                </h1>
-              </div>
+              )}
+            </div>
 
-              {user && (
+            <div className="flex-1 flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl md:text-4xl font-semibold text-gray-900 leading-tight">
+                    {recipe.name}
+                  </h1>
+                </div>
+
                 <button
+                  type="button"
                   onClick={toggleFavorite}
-                  className="p-3 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
+                  disabled={!canFavorite}
+                  title="Favorite"
+                  aria-label="Favorite recipe"
+                  className="size-8 rounded-full border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span
-                    className={`material-symbols-outlined text-2xl ${
-                      recipe.isFavorited ? "text-red-500" : "text-gray-400"
+                    className={`material-symbols-outlined text-base ${
+                      recipe.isFavorited ? "text-red-500" : "text-gray-900"
                     }`}
                     style={{
                       fontVariationSettings: recipe.isFavorited
@@ -176,203 +181,115 @@ export default function RecipeDetailPage({
                     favorite
                   </span>
                 </button>
-              )}
-            </div>
+              </div>
 
-            <p className="text-gray-600 mb-6">{recipe.description}</p>
-
-            {/* Quick Info */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
-                <span className="material-symbols-outlined text-blue-600 text-3xl">
-                  schedule
-                </span>
-                <div>
-                  <p className="text-sm text-gray-500">Prep Time</p>
-                  <p className="font-semibold text-gray-900">
-                    {recipe.prepTime} min
-                  </p>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                <div className="px-2 py-1 bg-gray-200 rounded-sm">
+                  {recipe.category}
                 </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
-                <span className="material-symbols-outlined text-orange-600 text-3xl">
-                  oven_gen
-                </span>
-                <div>
-                  <p className="text-sm text-gray-500">Cook Time</p>
-                  <p className="font-semibold text-gray-900">
-                    {recipe.cookTime} min
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
-                <span className="material-symbols-outlined text-purple-600 text-3xl">
-                  {recipe.difficulty === "EASY"
-                    ? "sentiment_satisfied"
-                    : recipe.difficulty === "MEDIUM"
-                    ? "sentiment_neutral"
-                    : "sentiment_stressed"}
-                </span>
-                <div>
-                  <p className="text-sm text-gray-500">Difficulty</p>
-                  <p className="font-semibold text-gray-900">
-                    {recipe.difficulty}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
-                <span className="material-symbols-outlined text-green-600 text-3xl">
-                  restaurant
-                </span>
-                <div>
-                  <p className="text-sm text-gray-500">Servings</p>
-                  <p className="font-semibold text-gray-900">
-                    {recipe.servings} people
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Tags */}
-            {recipe.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {recipe.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                  >
-                    #{tag}
+                <div className="px-2 py-1 bg-gray-200 rounded-sm inline-flex items-center gap-1">
+                  <span className="material-symbols-outlined text-base text-gray-500">
+                    local_fire_department
                   </span>
-                ))}
-              </div>
-            )}
-
-            {/* Admin Actions */}
-            {user?.role === "ADMIN" && (
-              <div className="flex gap-3 mt-6">
-                <Link
-                  href={`/recipes/${recipe.id}/edit`}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  <span>{recipe.nutrition.calories} kcal</span>
+                </div>
+                <div className="px-2 py-1 bg-gray-200 rounded-sm inline-flex items-center gap-1">
+                  <span className="material-symbols-outlined text-base text-gray-500">
+                    schedule
+                  </span>
+                  <span>{totalTime} min</span>
+                </div>
+                <div
+                  className={`px-2 py-1 rounded-sm outline outline-offset-1 inline-flex items-center gap-1 ${difficultyClass}`}
                 >
-                  <span className="material-symbols-outlined">edit</span>
-                  Edit
-                </Link>
-                <button
-                  onClick={deleteRecipe}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  <span className="material-symbols-outlined">delete</span>
-                  Delete
-                </button>
+                  <span className="material-symbols-outlined text-base">
+                    chef_hat
+                  </span>
+                  <span>{difficultyLabel}</span>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Nutrition Facts */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Nutrition Content
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <p className="text-sm text-gray-500 mb-1">Calories</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {recipe.nutrition.calories}
-              </p>
-              <p className="text-xs text-gray-500">kcal</p>
-            </div>
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <p className="text-sm text-gray-500 mb-1">Fat</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {recipe.nutrition.fat}
-              </p>
-              <p className="text-xs text-gray-500">g</p>
-            </div>
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <p className="text-sm text-gray-500 mb-1">Protein</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {recipe.nutrition.protein}
-              </p>
-              <p className="text-xs text-gray-500">g</p>
-            </div>
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <p className="text-sm text-gray-500 mb-1">Carbs</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {recipe.nutrition.carbs}
-              </p>
-              <p className="text-xs text-gray-500">g</p>
-            </div>
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <p className="text-sm text-gray-500 mb-1">Fiber</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {recipe.nutrition.fiber}
-              </p>
-              <p className="text-xs text-gray-500">g</p>
-            </div>
-            {recipe.nutrition.sugar !== undefined && (
-              <div className="text-center p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-gray-500 mb-1">Sugar</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {recipe.nutrition.sugar}
-                </p>
-                <p className="text-xs text-gray-500">g</p>
+              <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-1">
+                  <div className="text-gray-500 text-base">Description</div>
+                  <div className="text-gray-600 text-base leading-6">
+                    {recipe.description}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="text-gray-500 text-base">
+                    Nutrient content
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-base">
+                    {nutritionItems.length === 0 ? (
+                      <span className="text-gray-600">-</span>
+                    ) : (
+                      nutritionItems.map((item, index) => (
+                        <Fragment key={item.label}>
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <span className="text-gray-900 font-semibold">
+                              {item.value}
+                              {item.unit}
+                            </span>
+                            <span>{item.label}</span>
+                          </div>
+                          {index < nutritionItems.length - 1 && (
+                            <span className="size-1.5 bg-gray-400 rounded-full" />
+                          )}
+                        </Fragment>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="text-gray-500 text-base">Ingredient</div>
+                  <div className="text-gray-600 text-base leading-6">
+                    {ingredientsText}
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
           </div>
-        </div>
 
-        {/* Ingredients */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Ingredients
-          </h2>
-          <ul className="space-y-3">
-            {recipe.ingredients.map((ingredient, index) => (
-              <li key={index} className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-green-600 mt-0.5">
-                  check_circle
-                </span>
-                <span className="text-gray-700">
-                  <span className="font-medium">
-                    {ingredient.amount} {ingredient.unit}
-                  </span>{" "}
-                  {ingredient.name}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-sm text-gray-600">
+              <span className="material-symbols-outlined text-base text-gray-500">
+                menu_book
+              </span>
+              <span>Step by step preparation instruction:</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-400">
+              <span className="material-symbols-outlined text-base">
+                chevron_left
+              </span>
+              <span className="material-symbols-outlined text-base">
+                chevron_right
+              </span>
+            </div>
+          </div>
 
-        {/* Instructions */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <span className="material-symbols-outlined">menu_book</span>
-            Step by Step Preparation
-          </h2>
-
-          <div className="flex gap-6 overflow-x-auto pb-4">
+          <div className="flex gap-4 overflow-x-auto pb-2">
             {recipe.instructions.map((instruction) => (
               <div
                 key={instruction.step}
-                className="shrink-0 w-80 bg-slate-50 rounded-lg p-6"
+                className="min-w-56 w-64 p-4 bg-white rounded-2xl outline outline-offset-1 outline-gray-200"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold">
-                    {instruction.step}
-                  </div>
-                  <p className="text-sm text-gray-500">
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-blue-300 text-sm font-normal">
                     Step {instruction.step} of {recipe.instructions.length}
-                  </p>
+                  </div>
+                  <div className="text-gray-900 text-base font-semibold leading-6 line-clamp-2">
+                    {instructionTitle(instruction.description)}
+                  </div>
+                  <div className="text-gray-600 text-sm font-normal leading-5">
+                    {instruction.description}
+                  </div>
                 </div>
-                <p className="text-gray-700 leading-relaxed">
-                  {instruction.description}
-                </p>
               </div>
             ))}
           </div>
         </div>
       </div>
-    </AppLayout>
+    </div>
   );
 }
